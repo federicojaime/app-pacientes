@@ -42,6 +42,13 @@
   }
 }
 
+/* Estilos específicos para la cámara */
+video {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* Animación para el escáner */
 @keyframes scannerLine {
   0% {
@@ -57,4 +64,17 @@
 
 .scanner-animation {
   animation: scannerLine 2s linear infinite;
+}
+
+/* Asegurar que los controles del video no estén visibles */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+/* Clase para forzar la visibilidad del video */
+.camera-active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1 !important;
 }

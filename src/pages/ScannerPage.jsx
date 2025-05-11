@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaIdCard, FaUserPlus, FaSpinner, FaInfoCircle, FaSearch } from 'react-icons/fa';
+import { FaIdCard, FaUserPlus, FaSpinner, FaInfoCircle, FaSearch, FaBug, FaExclamationTriangle } from 'react-icons/fa';
 import DniScanner from '../components/scanner/DniScanner';
 import patientService from '../services/patientService';
 import PatientContext from '../contexts/PatientContext';
@@ -10,15 +10,46 @@ import ErrorHandler from '../components/ui/ErrorHandler';
 const ScannerPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [debug, setDebug] = useState({
+    dniScanned: null,
+    apiCallTime: null,
+    apiResponse: null,
+    errorDetails: null
+  });
   const { setPatient } = useContext(PatientContext);
   const navigate = useNavigate();
 
   const handleDniScanned = async (dni) => {
     setLoading(true);
     setError(null);
+    setDebug({
+      dniScanned: dni,
+      apiCallTime: new Date().toLocaleTimeString(),
+      apiResponse: null,
+      errorDetails: null
+    });
     
     try {
+      // Mostrar alerta con el DNI escaneado
+      const debugAlert = document.createElement('div');
+      debugAlert.className = 'fixed top-0 left-0 right-0 p-4 m-4 z-50 bg-blue-500 text-white rounded-lg shadow-lg';
+      debugAlert.innerHTML = `<strong>DNI escaneado:</strong> ${dni}`;
+      document.body.appendChild(debugAlert);
+      setTimeout(() => document.body.removeChild(debugAlert), 5000);
+      
+      console.log('Verificando DNI:', dni);
       const result = await patientService.checkPatientByDni(dni);
+      
+      // Actualizar información de depuración
+      setDebug(prev => ({
+        ...prev,
+        apiResponse: {
+          success: true,
+          exists: result.exists,
+          time: new Date().toLocaleTimeString(),
+          data: result
+        }
+      }));
       
       if (result.exists && result.patient) {
         // Si el paciente existe, guardamos sus datos y redirigimos al perfil
@@ -30,6 +61,24 @@ const ScannerPage = () => {
       }
     } catch (error) {
       console.error('Error al verificar el DNI:', error);
+      
+      // Capturar detalles del error para depuración
+      setDebug(prev => ({
+        ...prev,
+        apiResponse: {
+          success: false,
+          time: new Date().toLocaleTimeString()
+        },
+        errorDetails: {
+          message: error.message,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method
+        }
+      }));
+      
       setError(error);
     } finally {
       setLoading(false);
@@ -55,7 +104,7 @@ const ScannerPage = () => {
           Verificación de identidad
         </h1>
         <p className="text-gray-600 dark:text-gray-300">
-          Escanea el código de barras PDF417 en la parte trasera de tu DNI para acceder a tus datos médicos
+          Escanea el código PDF417 del reverso de tu DNI para acceder a tus datos médicos
         </p>
       </motion.div>
 
@@ -89,6 +138,15 @@ const ScannerPage = () => {
           <FaSpinner className="text-4xl text-medico-teal animate-spin mb-4" />
           <p className="text-gray-600 dark:text-gray-300 font-medium">Verificando tu identidad...</p>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">Estamos consultando tus datos en el sistema</p>
+          
+          {/* Mostrar el DNI que se está verificando */}
+          {debug.dniScanned && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+              <strong>DNI consultado:</strong> {debug.dniScanned}
+              <br />
+              <span className="text-xs text-blue-500">Consulta iniciada a las {debug.apiCallTime}</span>
+            </div>
+          )}
         </motion.div>
       ) : (
         <>
@@ -99,6 +157,31 @@ const ScannerPage = () => {
                 onRetry={handleRetry}
                 message="Hubo un problema al verificar el DNI. Por favor, inténtalo de nuevo."
               />
+              
+              {/* Información de depuración del error */}
+              {debug.errorDetails && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-center mb-2 text-red-600 dark:text-red-400">
+                    <FaBug className="mr-2" />
+                    <h3 className="font-bold">Detalles del error (depuración)</h3>
+                  </div>
+                  <div className="text-xs text-red-700 dark:text-red-300 space-y-1">
+                    <p><strong>DNI consultado:</strong> {debug.dniScanned}</p>
+                    <p><strong>Hora de consulta:</strong> {debug.apiCallTime}</p>
+                    <p><strong>Endpoint:</strong> {debug.errorDetails.method?.toUpperCase()} {debug.errorDetails.url}</p>
+                    <p><strong>Status:</strong> {debug.errorDetails.status} {debug.errorDetails.statusText}</p>
+                    <p><strong>Mensaje:</strong> {debug.errorDetails.message}</p>
+                    {debug.errorDetails.data && (
+                      <div>
+                        <strong>Respuesta del servidor:</strong>
+                        <pre className="mt-1 p-2 bg-red-100 dark:bg-red-900/40 rounded overflow-x-auto">
+                          {JSON.stringify(debug.errorDetails.data, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
@@ -137,6 +220,29 @@ const ScannerPage = () => {
               </div>
             </div>
           </motion.div>
+          
+          {/* Estado de depuración API */}
+          {debug.dniScanned && !loading && (
+            <div className="mt-6 p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="flex items-center mb-2">
+                <FaBug className="mr-2 text-gray-500" />
+                <h3 className="font-medium text-gray-700 dark:text-gray-300">Última consulta</h3>
+              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">
+                <p><strong>DNI consultado:</strong> {debug.dniScanned}</p>
+                <p><strong>Hora de consulta:</strong> {debug.apiCallTime}</p>
+                {debug.apiResponse && (
+                  <div className={`mt-1 p-2 rounded ${debug.apiResponse.success ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
+                    <p><strong>Estado:</strong> {debug.apiResponse.success ? 'Éxito' : 'Error'}</p>
+                    {debug.apiResponse.exists !== undefined && (
+                      <p><strong>Paciente encontrado:</strong> {debug.apiResponse.exists ? 'Sí' : 'No'}</p>
+                    )}
+                    <p><strong>Hora de respuesta:</strong> {debug.apiResponse.time}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
