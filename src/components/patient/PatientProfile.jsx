@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaUser, FaIdCard, FaMapMarkerAlt, FaPhone, FaEnvelope, FaPencilAlt, FaSave, FaTimes, FaWeight, FaRulerVertical, FaHospital } from 'react-icons/fa';
+import { FaUser, FaIdCard,FaInfoCircle, FaMapMarkerAlt, FaPhone, FaEnvelope, FaPencilAlt, FaSave, FaTimes, FaWeight, FaRulerVertical, FaHospital } from 'react-icons/fa';
 
 const PatientProfile = ({ patient, onSave }) => {
   const [editableFields, setEditableFields] = useState({
@@ -18,20 +18,132 @@ const PatientProfile = ({ patient, onSave }) => {
   });
 
   const [editing, setEditing] = useState({});
+  const [touched, setTouched] = useState({});
+  const [validations, setValidations] = useState({});
+  
+  // Actualizar los campos editables cuando cambia el paciente
+  useEffect(() => {
+    if (patient) {
+      setEditableFields({
+        email: patient.email || '',
+        telefono: patient.telefono || '',
+        calle: patient.calle || '',
+        numero: patient.numero || '',
+        piso: patient.piso || '',
+        departamento: patient.departamento || '',
+        ciudad: patient.ciudad || '',
+        provincia: patient.provincia || '',
+        cpostal: patient.cpostal || '',
+        peso: patient.peso || '',
+        talla: patient.talla || ''
+      });
+    }
+  }, [patient]);
   
   // Campos que el usuario puede editar
   const editableFieldsConfig = {
-    telefono: { icon: <FaPhone />, label: 'Teléfono', type: 'text' },
-    email: { icon: <FaEnvelope />, label: 'Email', type: 'email' },
-    calle: { icon: <FaMapMarkerAlt />, label: 'Calle', type: 'text' },
-    numero: { icon: null, label: 'Número', type: 'number' },
-    piso: { icon: null, label: 'Piso', type: 'number' },
-    departamento: { icon: null, label: 'Departamento', type: 'text' },
-    ciudad: { icon: <FaMapMarkerAlt />, label: 'Ciudad', type: 'text' },
-    provincia: { icon: <FaMapMarkerAlt />, label: 'Provincia', type: 'text' },
-    cpostal: { icon: <FaMapMarkerAlt />, label: 'Código Postal', type: 'text' },
-    peso: { icon: <FaWeight />, label: 'Peso (kg)', type: 'number' },
-    talla: { icon: <FaRulerVertical />, label: 'Talla (cm)', type: 'number' }
+    telefono: { 
+      icon: <FaPhone />, 
+      label: 'Teléfono', 
+      type: 'tel',
+      placeholder: 'Ingresa tu teléfono',
+      validate: value => {
+        if (value && !/^\d{7,15}$/.test(value)) {
+          return 'El teléfono debe tener entre 7 y 15 dígitos';
+        }
+        return null;
+      }
+    },
+    email: { 
+      icon: <FaEnvelope />, 
+      label: 'Email', 
+      type: 'email',
+      placeholder: 'Ingresa tu email',
+      validate: value => {
+        if (value && !/\S+@\S+\.\S+/.test(value)) {
+          return 'Ingresa un email válido';
+        }
+        return null;
+      }
+    },
+    calle: { 
+      icon: <FaMapMarkerAlt />, 
+      label: 'Calle', 
+      type: 'text',
+      placeholder: 'Ingresa tu calle'
+    },
+    numero: { 
+      icon: null, 
+      label: 'Número', 
+      type: 'text',
+      placeholder: 'Nº',
+      validate: value => {
+        if (value && !/^\d{1,5}$/.test(value)) {
+          return 'Ingresa un número válido';
+        }
+        return null;
+      }
+    },
+    piso: { 
+      icon: null, 
+      label: 'Piso', 
+      type: 'text',
+      placeholder: 'Piso'
+    },
+    departamento: { 
+      icon: null, 
+      label: 'Departamento', 
+      type: 'text',
+      placeholder: 'Depto.'
+    },
+    ciudad: { 
+      icon: <FaMapMarkerAlt />, 
+      label: 'Ciudad', 
+      type: 'text',
+      placeholder: 'Ingresa tu ciudad'
+    },
+    provincia: { 
+      icon: <FaMapMarkerAlt />, 
+      label: 'Provincia', 
+      type: 'text',
+      placeholder: 'Ingresa tu provincia'
+    },
+    cpostal: { 
+      icon: <FaMapMarkerAlt />, 
+      label: 'Código Postal', 
+      type: 'text',
+      placeholder: 'CP',
+      validate: value => {
+        if (value && !/^\d{1,8}$/.test(value)) {
+          return 'Ingresa un código postal válido';
+        }
+        return null;
+      }
+    },
+    peso: { 
+      icon: <FaWeight />, 
+      label: 'Peso (kg)', 
+      type: 'number',
+      placeholder: 'Ingresa tu peso en kg',
+      validate: value => {
+        if (value && (isNaN(value) || value < 0 || value > 500)) {
+          return 'Ingresa un peso válido';
+        }
+        return null;
+      }
+    },
+    talla: { 
+      icon: <FaRulerVertical />, 
+      label: 'Talla (cm)', 
+      type: 'number',
+      placeholder: 'Ingresa tu talla en cm',
+      validate: value => {
+        if (value && (isNaN(value) || value < 0 || value > 300)) {
+          return 'Ingresa una talla válida';
+        }
+        return null;
+      }
+    }
   };
 
   // Campos que solo pueden verse (no editarse)
@@ -40,21 +152,53 @@ const PatientProfile = ({ patient, onSave }) => {
     apellido: { icon: <FaUser />, label: 'Apellido', value: patient?.apellido },
     dni: { icon: <FaIdCard />, label: 'DNI', value: patient?.dni },
     sexo: { icon: <FaUser />, label: 'Sexo', value: patient?.sexo === 'M' ? 'Masculino' : 'Femenino' },
-    fecnac: { icon: <FaUser />, label: 'Fecha de Nacimiento', value: patient?.fecnac ? new Date(patient.fecnac).toLocaleDateString() : '' },
-    idobrasocial: { icon: <FaHospital />, label: 'Obra Social', value: patient?.idobrasocial ? patient.idobrasocial : 'SIN OBRA SOCIAL' }
+    fecnac: { 
+      icon: <FaUser />, 
+      label: 'Fecha de Nacimiento', 
+      value: patient?.fecnac 
+        ? new Date(patient.fecnac).toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }) 
+        : ''
+    },
+    idobrasocial: { 
+      icon: <FaHospital />, 
+      label: 'Obra Social', 
+      value: patient?.idobrasocial ? patient.idobrasocial : 'SIN OBRA SOCIAL' 
+    }
+  };
+
+  // Validar un campo específico
+  const validateField = (field, value) => {
+    const config = editableFieldsConfig[field];
+    if (config && config.validate) {
+      return config.validate(value);
+    }
+    return null;
   };
 
   const handleEdit = (field) => {
     setEditing({...editing, [field]: true});
+    setTouched({...touched, [field]: false});
   };
 
   const handleCancel = (field) => {
     setEditing({...editing, [field]: false});
+    setTouched({...touched, [field]: false});
     // Revertir a los valores originales
     setEditableFields({
       ...editableFields,
       [field]: patient[field] || ''
     });
+    
+    // Eliminar cualquier error de validación para este campo
+    if (validations[field]) {
+      const newValidations = {...validations};
+      delete newValidations[field];
+      setValidations(newValidations);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -62,16 +206,58 @@ const PatientProfile = ({ patient, onSave }) => {
       ...editableFields,
       [field]: value
     });
+    
+    // Ejecutar validación solo si el campo ya ha sido tocado
+    if (touched[field]) {
+      const error = validateField(field, value);
+      setValidations({
+        ...validations,
+        [field]: error
+      });
+    }
+  };
+  
+  const handleBlur = (field) => {
+    setTouched({...touched, [field]: true});
+    const error = validateField(field, editableFields[field]);
+    setValidations({
+      ...validations,
+      [field]: error
+    });
   };
 
   const handleSave = (field) => {
+    // Validar el campo antes de guardar
+    const error = validateField(field, editableFields[field]);
+    
+    if (error) {
+      setValidations({
+        ...validations,
+        [field]: error
+      });
+      return;
+    }
+    
     setEditing({...editing, [field]: false});
-    onSave({...patient, [field]: editableFields[field]});
+    setTouched({...touched, [field]: false});
+    
+    // Eliminar cualquier error de validación para este campo
+    if (validations[field]) {
+      const newValidations = {...validations};
+      delete newValidations[field];
+      setValidations(newValidations);
+    }
+    
+    // Sólo actualizar si el valor ha cambiado
+    if (editableFields[field] !== patient[field]) {
+      onSave({...patient, [field]: editableFields[field]});
+    }
   };
 
   const renderEditableField = (key) => {
     const config = editableFieldsConfig[key];
     const isEditing = editing[key];
+    const error = validations[key];
     
     return (
       <div key={key} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-3 transition-all duration-200">
@@ -86,6 +272,7 @@ const PatientProfile = ({ patient, onSave }) => {
                 onClick={() => handleSave(key)}
                 className="p-1 text-green-500 hover:text-green-600 transition-colors"
                 aria-label="Guardar"
+                disabled={!!error}
               >
                 <FaSave />
               </button>
@@ -109,13 +296,20 @@ const PatientProfile = ({ patient, onSave }) => {
         </div>
 
         {isEditing ? (
-          <input
-            type={config.type}
-            value={editableFields[key]}
-            onChange={(e) => handleChange(key, e.target.value)}
-            className="mt-2 w-full px-3 py-2 border dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-            autoFocus
-          />
+          <div className="mt-2">
+            <input
+              type={config.type}
+              value={editableFields[key]}
+              onChange={(e) => handleChange(key, e.target.value)}
+              onBlur={() => handleBlur(key)}
+              className={`w-full px-3 py-2 border ${error ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
+              placeholder={config.placeholder}
+              autoFocus
+            />
+            {error && (
+              <p className="mt-1 text-sm text-red-500 dark:text-red-400">{error}</p>
+            )}
+          </div>
         ) : (
           <div className="mt-1 text-gray-700 dark:text-gray-300">
             {editableFields[key] || <span className="text-gray-400 dark:text-gray-500 italic">Sin datos</span>}
@@ -141,6 +335,9 @@ const PatientProfile = ({ patient, onSave }) => {
     );
   };
 
+  // Verificar si hay algún campo en modo edición
+  const isAnyFieldEditing = Object.values(editing).some(v => v);
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -159,6 +356,15 @@ const PatientProfile = ({ patient, onSave }) => {
           </div>
         </div>
       </div>
+
+      {isAnyFieldEditing && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-600 dark:text-blue-300">
+          <div className="flex items-center gap-2">
+            <FaInfoCircle className="text-blue-500" />
+            <p>Para guardar tus cambios, haz clic en el icono de guardado.</p>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Información Personal</h3>

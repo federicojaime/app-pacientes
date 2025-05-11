@@ -1,49 +1,21 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { BrowserMultiFormatReader, BarcodeFormat, NotFoundException } from '@zxing/library';
-import { FaCamera, FaQrcode, FaSpinner, FaTimes, FaKeyboard, FaBug, FaInfoCircle, FaAngleDown, FaAngleUp, FaExclamationTriangle, FaCheck } from 'react-icons/fa';
+import { FaCamera, FaQrcode, FaSpinner, FaTimes, FaKeyboard, FaCheck, FaInfoCircle } from 'react-icons/fa';
 
 const DniScanner = ({ onDniScanned }) => {
     const videoRef = useRef(null);
     const [scanning, setScanning] = useState(false);
     const [error, setError] = useState(null);
     const [rawScan, setRawScan] = useState(null);
-    const [lastScan, setLastScan] = useState(null);
     const [timeoutMsg, setTimeoutMsg] = useState(null);
     const [scanTimeout, setScanTimeout] = useState(null);
+    const [scannedData, setScannedData] = useState(null);
     const codeReader = useRef(null);
-    const [showDebug, setShowDebug] = useState(true); // Mostrar depuración por defecto
-    const [debugInfo, setDebugInfo] = useState({
-        parsedParts: [],
-        detectedFormat: null,
-        dniCandidates: [],
-        deviceInfo: '',
-        logs: []
-    });
-
-    // Función para añadir logs visibles sin usar console.log
-    const addLog = (message, type = 'info') => {
-        setDebugInfo(prev => ({
-            ...prev,
-            logs: [...prev.logs, { 
-                message, 
-                type, 
-                timestamp: new Date().toLocaleTimeString()
-            }]
-        }));
-    };
 
     // Detectar si es un dispositivo móvil
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     useEffect(() => {
-        // Agregar información del dispositivo
-        setDebugInfo(prev => ({
-            ...prev,
-            deviceInfo: `Dispositivo: ${isMobile ? 'Móvil' : 'PC/Laptop'}, UserAgent: ${navigator.userAgent.substring(0, 50)}...`
-        }));
-        
-        addLog(`Inicializando escáner en ${isMobile ? 'dispositivo móvil' : 'PC/Laptop'}`);
-        
         // Limpiar al desmontar el componente
         return () => {
             stopScanner();
@@ -53,19 +25,8 @@ const DniScanner = ({ onDniScanned }) => {
     const startScanner = async () => {
         setError(null);
         setRawScan(null);
-        setLastScan(null);
+        setScannedData(null);
         setTimeoutMsg(null);
-        setDebugInfo(prev => ({
-            ...prev,
-            parsedParts: [],
-            detectedFormat: null,
-            dniCandidates: [],
-            logs: [...prev.logs, { 
-                message: 'Iniciando cámara...', 
-                type: 'info', 
-                timestamp: new Date().toLocaleTimeString()
-            }]
-        }));
         
         if (scanTimeout) clearTimeout(scanTimeout);
         
@@ -79,23 +40,15 @@ const DniScanner = ({ onDniScanned }) => {
             const reader = codeReader.current;
             const videoInputDevices = await reader.listVideoInputDevices();
             
-            addLog(`Encontrados ${videoInputDevices.length} dispositivos de cámara`, 'success');
-            
             if (videoInputDevices.length === 0) {
                 throw new Error('No se encontró cámara disponible');
             }
             
-            // Información sobre las cámaras disponibles
-            videoInputDevices.forEach((device, index) => {
-                addLog(`Cámara ${index + 1}: ${device.label || 'Sin etiqueta'} (${device.deviceId.substring(0, 10)}...)`, 'info');
-            });
-            
-            // Encontrar la cámara trasera (si está disponible)
+            // Encontrar la cámara adecuada
             let selectedDeviceId = null;
             
             if (isMobile) {
-                // En dispositivos móviles, generalmente queremos la cámara trasera
-                // Buscar cámara trasera por etiqueta
+                // En dispositivos móviles, intentar usar la cámara trasera
                 const backCamera = videoInputDevices.find(device => 
                     device.label.toLowerCase().includes('back') ||
                     device.label.toLowerCase().includes('trasera') ||
@@ -106,20 +59,14 @@ const DniScanner = ({ onDniScanned }) => {
                 
                 if (backCamera) {
                     selectedDeviceId = backCamera.deviceId;
-                    addLog(`Usando cámara trasera: ${backCamera.label}`, 'success');
                 } else {
                     // De lo contrario, tratar de usar la última cámara (suele ser la trasera en móviles)
                     selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
-                    addLog(`No se encontró cámara trasera, usando la última disponible: ${videoInputDevices[videoInputDevices.length - 1].label}`, 'warning');
                 }
             } else {
-                // En PC/laptop, usar la primera disponible (generalmente solo hay una)
+                // En PC/laptop, usar la primera disponible
                 selectedDeviceId = videoInputDevices[0].deviceId;
-                addLog(`Usando cámara: ${videoInputDevices[0].label}`, 'info');
             }
-            
-            const hints = new Map();
-            hints.set(BarcodeFormat.PDF_417, {});
             
             // Comenzar la decodificación continua
             reader.decodeFromVideoDevice(
@@ -128,32 +75,26 @@ const DniScanner = ({ onDniScanned }) => {
                 (result, err) => {
                     if (result) {
                         const scannedText = result.getText();
-                        addLog(`¡Código escaneado! (${scannedText.length} caracteres)`, 'success');
                         setRawScan(scannedText);
                         setTimeoutMsg(null);
                         if (scanTimeout) clearTimeout(scanTimeout);
-                        processPdf417Data(scannedText);
+                        processDniData(scannedText);
                         stopScanner();
                     } else if (err && !(err instanceof NotFoundException)) {
-                        addLog(`Error durante el escaneo: ${err}`, 'error');
                         setError('Error al escanear: ' + err);
                     }
                 },
                 { formats: [BarcodeFormat.PDF_417] }
             );
             
-            addLog('Escáner iniciado correctamente, listo para detectar códigos PDF417', 'success');
-            
             // Establecer un tiempo de espera para mostrar mensaje si no se escanea nada
             const timeout = setTimeout(() => {
                 setTimeoutMsg("No se detectó ningún código. Intenta mover el DNI, mejorar la iluminación o enfocar mejor.");
-                addLog('Timeout: No se detectó código en 10 segundos', 'warning');
-            }, 10000);
+            }, 20000); // Aumentado a 20 segundos para dar más tiempo
             
             setScanTimeout(timeout);
             
         } catch (err) {
-            addLog(`Error al iniciar el escáner: ${err.message}`, 'error');
             setError(err.message || 'No se pudo iniciar la cámara. Verifica los permisos e intenta de nuevo.');
             setScanning(false);
         }
@@ -165,184 +106,74 @@ const DniScanner = ({ onDniScanned }) => {
         if (scanTimeout) clearTimeout(scanTimeout);
         if (codeReader.current) {
             codeReader.current.reset();
-            addLog('Escáner detenido', 'info');
         }
     };
 
-    const processPdf417Data = (data) => {
+    const processDniData = (data) => {
         try {
-            setLastScan(data);
-            addLog(`Procesando datos: ${data.substring(0, 30)}...`, 'info');
+            console.log("Datos escaneados:", data);
             
-            // Extraer el DNI: buscar el primer número de 7 u 8 dígitos
-            let dni = null;
-            let detectedFormat = 'desconocido';
-            let parsedParts = [];
-            let dniCandidates = [];
-            
-            // Intentar extraer el DNI según diferentes formatos de códigos PDF417 de DNI argentino
-            
-            // Formato 1: Separado por pipes (|)
-            if (data.includes('|')) {
-                const parts = data.split('|');
-                parsedParts = parts;
-                detectedFormat = 'pipes';
-                addLog(`Formato detectado: PIPES con ${parts.length} partes`, 'info');
-                
-                // En algunos formatos el DNI es el 2do elemento (índice 1)
-                if (parts.length > 1 && /^\d{7,8}$/.test(parts[1])) {
-                    dni = parts[1];
-                    dniCandidates.push({ value: parts[1], source: 'posición 2', selected: true });
-                    addLog(`DNI encontrado en posición 2: ${parts[1]}`, 'success');
-                } else {
-                    // Buscar en cualquier parte
-                    const found = parts.find(p => /^\d{7,8}$/.test(p));
-                    if (found) {
-                        dni = found;
-                        const index = parts.indexOf(found) + 1;
-                        dniCandidates.push({ value: found, source: `posición ${index}`, selected: true });
-                        addLog(`DNI encontrado en posición ${index}: ${found}`, 'success');
-                    }
-                }
-                
-                // Recopilar todos los candidatos posibles
-                parts.forEach((part, index) => {
-                    if (/^\d{6,9}$/.test(part) && part !== dni) {
-                        dniCandidates.push({ value: part, source: `posición ${index + 1}`, selected: false });
-                        addLog(`Posible DNI en posición ${index + 1}: ${part}`, 'info');
-                    }
-                });
-            } 
-            // Formato 2: Separado por arrobas (@)
-            else if (data.includes('@')) {
+            // Verificar si el formato contiene @ como separador (formato requerido)
+            if (data.includes('@')) {
                 const parts = data.split('@');
-                parsedParts = parts;
-                detectedFormat = 'arrobas';
-                addLog(`Formato detectado: ARROBAS con ${parts.length} partes`, 'info');
                 
-                // En algunos formatos el DNI es el 5to elemento (índice 4)
-                if (parts.length > 4 && /^\d{7,8}$/.test(parts[4])) {
-                    dni = parts[4];
-                    dniCandidates.push({ value: parts[4], source: 'posición 5', selected: true });
-                    addLog(`DNI encontrado en posición 5: ${parts[4]}`, 'success');
-                } else {
-                    // Buscar en cualquier parte
-                    const found = parts.find(p => /^\d{7,8}$/.test(p));
-                    if (found) {
-                        dni = found;
-                        const index = parts.indexOf(found) + 1;
-                        dniCandidates.push({ value: found, source: `posición ${index}`, selected: true });
-                        addLog(`DNI encontrado en posición ${index}: ${found}`, 'success');
-                    }
-                }
-                
-                // Recopilar todos los candidatos posibles
-                parts.forEach((part, index) => {
-                    if (/^\d{6,9}$/.test(part) && part !== dni) {
-                        dniCandidates.push({ value: part, source: `posición ${index + 1}`, selected: false });
-                        addLog(`Posible DNI en posición ${index + 1}: ${part}`, 'info');
-                    }
-                });
-            }
-            // Otros formatos posibles
-            else {
-                detectedFormat = 'texto plano';
-                parsedParts = [data];
-                addLog('Formato detectado: TEXTO PLANO (sin separadores)', 'warning');
-            }
-            
-            // Si no se encontró con los separadores conocidos, buscar cualquier número de 7 u 8 dígitos en el texto completo
-            if (!dni) {
-                addLog('Buscando DNI con expresiones regulares en texto completo', 'info');
-                const dniMatches = data.match(/\b\d{7,8}\b/g);
-                if (dniMatches && dniMatches.length > 0) {
-                    addLog(`Se encontraron ${dniMatches.length} posibles DNIs con regex`, 'info');
-                    // Tomar el primer número que parece un DNI
-                    dni = dniMatches[0];
-                    dniCandidates.push({ value: dniMatches[0], source: 'regex', selected: true });
-                    addLog(`DNI seleccionado por regex: ${dniMatches[0]}`, 'success');
+                // Según el formato proporcionado, el DNI está en la posición 5 (índice 4)
+                // "00610299988@JAIME@FEDERICO NICOLAS@M@38437748@C@22/09/1994@28/09/2019@204"
+                if (parts.length >= 5) {
+                    const dni = parts[4];
+                    const apellido = parts[1] || '';
+                    const nombre = parts[2] || '';
+                    const genero = parts[3] || '';
+                    const fechaNac = parts.length >= 7 ? parts[6] : '';
                     
-                    // Agregar otros candidatos
-                    dniMatches.slice(1).forEach((match, idx) => {
-                        dniCandidates.push({ value: match, source: `regex adicional ${idx+1}`, selected: false });
-                        addLog(`Otro posible DNI por regex: ${match}`, 'info');
-                    });
+                    // Verificar que el DNI tenga el formato correcto (7-8 dígitos)
+                    if (/^\d{7,8}$/.test(dni)) {
+                        setScannedData({
+                            dni,
+                            apellido,
+                            nombre,
+                            genero,
+                            fechaNac
+                        });
+                        
+                        // Notificar el DNI escaneado correctamente
+                        onDniScanned(dni);
+                    } else {
+                        setError(`El DNI encontrado (${dni}) no tiene el formato correcto. Debe tener entre 7 y 8 dígitos.`);
+                    }
+                } else {
+                    setError("El código escaneado no contiene suficientes datos en el formato esperado.");
                 }
-            }
-            
-            // Actualizar información de depuración
-            setDebugInfo(prev => ({
-                ...prev,
-                parsedParts,
-                detectedFormat,
-                dniCandidates,
-            }));
-            
-            // Última verificación y procesamiento
-            if (dni && /^\d{7,8}$/.test(dni)) {
-                addLog(`DNI extraído con éxito: ${dni}`, 'success');
-                onDniScanned(dni);
             } else {
-                addLog('No se pudo extraer un DNI válido automáticamente', 'error');
-                setError("No se pudo extraer un DNI válido del código escaneado. Por favor, intenta de nuevo o ingresa el DNI manualmente.");
-                setLastScan(data);
+                // Intentar buscar un número de DNI en el texto completo como fallback
+                const dniMatch = data.match(/\b\d{7,8}\b/);
+                if (dniMatch) {
+                    setScannedData({
+                        dni: dniMatch[0],
+                        apellido: 'No disponible',
+                        nombre: 'No disponible',
+                        genero: 'No disponible',
+                        fechaNac: 'No disponible'
+                    });
+                    
+                    // Notificar el DNI escaneado encontrado
+                    onDniScanned(dniMatch[0]);
+                } else {
+                    setError("El código escaneado no tiene el formato esperado y no se pudo encontrar un DNI.");
+                }
             }
         } catch (err) {
-            addLog(`Error al procesar el código: ${err.message}`, 'error');
-            setError("El código escaneado no contiene un DNI válido o no es un DNI argentino");
+            console.error("Error al procesar el código:", err);
+            setError("Error al procesar el código: " + err.message);
         }
     };
 
     const enterDniManually = () => {
         const dni = prompt("Ingresa el número de DNI:");
         if (dni && /^\d{7,8}$/.test(dni)) {
-            addLog(`DNI ingresado manualmente: ${dni}`, 'success');
             onDniScanned(dni);
         } else if (dni) {
             alert("El DNI debe tener entre 7 y 8 dígitos");
-            addLog(`DNI manual inválido: ${dni}`, 'error');
-        }
-    };
-    
-    const toggleDebug = () => {
-        setShowDebug(!showDebug);
-    };
-    
-    const useCandidateDni = (dni) => {
-        if (dni && /^\d{7,8}$/.test(dni)) {
-            addLog(`Usando DNI candidato seleccionado manualmente: ${dni}`, 'success');
-            onDniScanned(dni);
-        } else {
-            alert("El DNI seleccionado no es válido");
-            addLog(`Intento de usar DNI candidato inválido: ${dni}`, 'error');
-        }
-    };
-    
-    // Función para obtener el estilo según el tipo de log
-    const getLogStyle = (type) => {
-        switch(type) {
-            case 'success':
-                return 'text-green-600 dark:text-green-400';
-            case 'error':
-                return 'text-red-600 dark:text-red-400';
-            case 'warning':
-                return 'text-yellow-600 dark:text-yellow-400';
-            default:
-                return 'text-gray-600 dark:text-gray-400';
-        }
-    };
-    
-    // Función para obtener el ícono según el tipo de log
-    const getLogIcon = (type) => {
-        switch(type) {
-            case 'success':
-                return <FaCheck className="text-green-500" />;
-            case 'error':
-                return <FaExclamationTriangle className="text-red-500" />;
-            case 'warning':
-                return <FaInfoCircle className="text-yellow-500" />;
-            default:
-                return <FaInfoCircle className="text-blue-500" />;
         }
     };
 
@@ -350,7 +181,7 @@ const DniScanner = ({ onDniScanned }) => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all duration-200">
             <div className="p-6">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-4">
-                    Escanear DNI (Debug)
+                    Escanear DNI
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
                     Coloca el código PDF417 del reverso de tu DNI frente a la cámara
@@ -398,164 +229,37 @@ const DniScanner = ({ onDniScanned }) => {
                 
                 {/* Carteles de feedback */}
                 {timeoutMsg && (
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 p-3 rounded-lg mb-2">
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 p-3 rounded-lg mb-4">
                         <strong>{timeoutMsg}</strong>
                     </div>
                 )}
                 
-                {/* Botón de depuración */}
-                <div className="flex justify-between mb-2">
-                    <div className="text-xs text-gray-500">Modo depuración</div>
-                    <button
-                        onClick={toggleDebug}
-                        className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-400"
-                    >
-                        <FaBug /> {showDebug ? "Ocultar registros" : "Mostrar registros"}
-                        {showDebug ? <FaAngleUp /> : <FaAngleDown />}
-                    </button>
-                </div>
-                
-                {/* Información del dispositivo */}
-                <div className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 p-2 rounded-lg mb-2 text-xs">
-                    {debugInfo.deviceInfo}
-                </div>
-                
-                {/* Registros de actividad */}
-                {showDebug && debugInfo.logs.length > 0 && (
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4 max-h-60 overflow-y-auto">
-                        <div className="p-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-gray-100 dark:bg-gray-900 z-20">
-                            <h3 className="font-medium text-gray-800 dark:text-white text-sm">Registros de actividad ({debugInfo.logs.length})</h3>
-                        </div>
-                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {debugInfo.logs.map((log, idx) => (
-                                <div key={idx} className="p-2 text-xs flex items-start gap-2">
-                                    <span className="text-gray-400 dark:text-gray-600 min-w-[40px]">
-                                        {log.timestamp}
-                                    </span>
-                                    <span className="mt-0.5 flex-shrink-0">
-                                        {getLogIcon(log.type)}
-                                    </span>
-                                    <span className={getLogStyle(log.type)}>
-                                        {log.message}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                
-                {/* Información de texto escaneado completo */}
-                {rawScan && (
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
-                        <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
-                            <h3 className="font-medium text-gray-800 dark:text-white text-sm">Texto escaneado completo</h3>
-                        </div>
-                        <div className="p-2">
-                            <div className="bg-gray-50 dark:bg-gray-900 p-2 rounded text-xs text-gray-800 dark:text-gray-200 break-all max-h-32 overflow-y-auto">
-                                {rawScan}
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
-                {/* Formato detectado */}
-                {debugInfo.detectedFormat && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 p-3 rounded-lg mb-2">
-                        <div className="flex items-center justify-between">
-                            <strong>Formato detectado:</strong>
-                            <span className="font-mono text-sm bg-indigo-100 dark:bg-indigo-800 px-2 py-0.5 rounded">
-                                {debugInfo.detectedFormat}
-                            </span>
-                        </div>
-                    </div>
-                )}
-                
-                {/* Candidatos a DNI */}
-                {debugInfo.dniCandidates.length > 0 && (
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
-                        <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
-                            <h3 className="font-medium text-gray-800 dark:text-white text-sm">Candidatos a DNI ({debugInfo.dniCandidates.length})</h3>
-                        </div>
-                        <div className="p-2 space-y-2">
-                            {debugInfo.dniCandidates.map((candidate, index) => (
-                                <div key={index} className={`flex items-center justify-between p-2 rounded border ${candidate.selected 
-                                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700'}`}>
-                                    <div>
-                                        <span className="font-medium text-gray-800 dark:text-white">{candidate.value}</span>
-                                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({candidate.source})</span>
-                                        {candidate.selected && (
-                                            <span className="ml-2 text-xs bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-1.5 py-0.5 rounded">
-                                                Seleccionado
-                                            </span>
-                                        )}
-                                    </div>
-                                    {!candidate.selected && (
-                                        <button 
-                                            onClick={() => useCandidateDni(candidate.value)}
-                                            className="text-xs bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 px-2 py-0.5 rounded hover:bg-primary-200 dark:hover:bg-primary-800/20"
-                                        >
-                                            Usar este DNI
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                
-                {/* Partes analizadas (solo mostrar si hay texto escaneado) */}
-                {debugInfo.parsedParts.length > 0 && (
-                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-4">
-                        <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex justify-between items-center">
-                            <h3 className="font-medium text-gray-800 dark:text-white text-sm">
-                                Partes analizadas ({debugInfo.parsedParts.length})
-                            </h3>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                Separador: {debugInfo.detectedFormat === 'pipes' ? '|' : 
-                                            debugInfo.detectedFormat === 'arrobas' ? '@' : 'ninguno'}
-                            </span>
-                        </div>
-                        <div className="divide-y divide-gray-100 dark:divide-gray-800 max-h-40 overflow-y-auto">
-                            {debugInfo.parsedParts.map((part, index) => (
-                                <div key={index} className="flex items-start gap-2 p-2">
-                                    <span className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded text-xs min-w-[24px] text-center">
-                                        {index + 1}
-                                    </span>
-                                    <span className="text-xs text-gray-800 dark:text-gray-200 break-all">
-                                        {part || '(vacío)'}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4">
+                {scannedData && (
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 p-4 rounded-lg mb-4">
                         <div className="flex items-start gap-2">
-                            <FaExclamationTriangle className="text-red-500 dark:text-red-400 mt-0.5" />
+                            <FaCheck className="text-green-500 mt-1 flex-shrink-0" />
                             <div>
-                                <div className="font-medium">{error}</div>
-                                {debugInfo.dniCandidates.length > 0 && (
-                                    <div className="mt-2 text-sm">
-                                        <p>Se encontraron posibles números pero no cumplen con el formato de DNI.</p>
-                                        <p className="mt-1">Si crees que uno de estos es tu DNI, puedes seleccionarlo manualmente:</p>
-                                        <div className="mt-2 grid grid-cols-2 gap-2">
-                                            {debugInfo.dniCandidates.map((candidate, index) => (
-                                                <button 
-                                                    key={index}
-                                                    onClick={() => useCandidateDni(candidate.value)}
-                                                    className="text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                >
-                                                    {candidate.value}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                <h3 className="font-bold">¡DNI escaneado correctamente!</h3>
+                                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <div><strong>DNI:</strong> {scannedData.dni}</div>
+                                    <div><strong>Apellido:</strong> {scannedData.apellido}</div>
+                                    <div><strong>Nombre:</strong> {scannedData.nombre}</div>
+                                    <div><strong>Género:</strong> {scannedData.genero === 'M' ? 'Masculino' : 'Femenino'}</div>
+                                    <div><strong>Fecha Nac.:</strong> {scannedData.fechaNac}</div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                )}
+                
+                {error && !scannedData && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4">
+                        <p className="font-medium">{error}</p>
+                        {rawScan && (
+                            <div className="mt-2 text-xs">
+                                <p>Texto escaneado: {rawScan.substring(0, 50)}...</p>
+                            </div>
+                        )}
                     </div>
                 )}
                 
@@ -582,6 +286,17 @@ const DniScanner = ({ onDniScanned }) => {
                     >
                         <FaKeyboard /> Ingresar DNI manualmente
                     </button>
+                </div>
+                
+                {/* Ayuda sobre formato de DNI */}
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-700 dark:text-blue-300">
+                    <div className="flex items-start gap-2">
+                        <FaInfoCircle className="mt-0.5 text-blue-500" />
+                        <div>
+                            <p>El scanner está configurado para el formato de DNI argentino.</p>
+                            <p className="mt-1">Formato esperado: @APELLIDO@NOMBRE@SEXO@DNI@...@FECHA_NACIMIENTO@...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

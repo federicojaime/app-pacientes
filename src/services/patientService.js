@@ -1,63 +1,15 @@
 import axios from 'axios';
 
-// Función para mostrar alertas de depuración en la interfaz
-const showDebugAlert = (message, type = 'info') => {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = `fixed bottom-0 left-0 right-0 p-4 m-4 z-50 rounded-lg shadow-lg ${
-    type === 'error' ? 'bg-red-500 text-white' : 
-    type === 'success' ? 'bg-green-500 text-white' : 
-    'bg-blue-500 text-white'
-  }`;
-  
-  // Crear contenedor flex para el mensaje y el botón de cerrar
-  const container = document.createElement('div');
-  container.className = 'flex justify-between items-start';
-  
-  // Contenido del mensaje
-  const content = document.createElement('div');
-  content.className = 'flex-1 mr-4';
-  
-  // Título
-  const title = document.createElement('h3');
-  title.className = 'font-bold mb-1';
-  title.textContent = type === 'error' ? 'Error API' : type === 'success' ? 'Éxito API' : 'Info API';
-  content.appendChild(title);
-  
-  // Mensaje
-  const text = document.createElement('p');
-  text.className = 'text-sm';
-  text.textContent = message;
-  content.appendChild(text);
-  
-  container.appendChild(content);
-  
-  // Botón de cerrar
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'text-white hover:text-gray-200';
-  closeBtn.textContent = '×';
-  closeBtn.style.fontSize = '24px';
-  closeBtn.onclick = () => document.body.removeChild(alertDiv);
-  container.appendChild(closeBtn);
-  
-  alertDiv.appendChild(container);
-  
-  document.body.appendChild(alertDiv);
-  
-  // Auto-eliminar después de 20 segundos
-  setTimeout(() => {
-    if (document.body.contains(alertDiv)) {
-      document.body.removeChild(alertDiv);
-    }
-  }, 20000);
-};
+// Obtener la URL base de la API desde las variables de entorno
+const API_URL = import.meta.env.VITE_API_URL || 'https://app-pacientes-server-production.up.railway.app/api';
 
 // Configuración base de axios
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // Timeout de 10 segundos para las peticiones
+  timeout: 15000, // Aumentado a 15 segundos para redes más lentas en producción
 });
 
 // Interceptor para agregar token de autenticación si existe
@@ -67,48 +19,70 @@ API.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Mostrar información de la solicitud
-  const requestInfo = `📤 ${config.method.toUpperCase()} ${config.url}`;
-  const requestData = config.data ? ` | Datos: ${JSON.stringify(config.data).substring(0, 500)}` : '';
-  showDebugAlert(`${requestInfo}${requestData}`, 'info');
+  // Agregar información de la versión de la app y el entorno
+  config.headers['X-App-Version'] = '1.0.0';
+  config.headers['X-App-Environment'] = import.meta.env.MODE || 'production';
   
   return config;
 }, (error) => {
-  showDebugAlert(`Error en la configuración de la solicitud: ${error.message}`, 'error');
+  console.error('Error en la configuración de la solicitud:', error);
   return Promise.reject(error);
 });
 
-// Interceptor para manejar errores de respuesta
+// Interceptor para el manejo de respuestas
 API.interceptors.response.use(
   (response) => {
-    // Mostrar información de la respuesta exitosa
-    const responseInfo = `📥 ${response.status} ${response.statusText} | ${response.config.method.toUpperCase()} ${response.config.url}`;
-    const responseData = response.data ? ` | Respuesta: ${JSON.stringify(response.data).substring(0, 500)}` : '';
-    showDebugAlert(`${responseInfo}${responseData}`, 'success');
-    
     return response;
   },
   (error) => {
     // Manejar errores comunes de forma centralizada
+    let errorMessage = 'Error de conexión. Verifica tu conexión a internet y vuelve a intentarlo.';
+    let errorDetails = null;
+    
     if (error.response) {
       // La petición fue hecha y el servidor respondió con un código de estado
-      // que cae fuera del rango 2xx
-      const errorInfo = `🚫 Error ${error.response.status} | ${error.config.method.toUpperCase()} ${error.config.url}`;
-      const errorData = error.response.data ? ` | Respuesta: ${JSON.stringify(error.response.data).substring(0, 500)}` : '';
-      showDebugAlert(`${errorInfo}${errorData}`, 'error');
+      switch (error.response.status) {
+        case 400:
+          errorMessage = 'Solicitud incorrecta. Por favor, verifica los datos proporcionados.';
+          break;
+        case 401:
+          errorMessage = 'No autorizado. Inicia sesión nuevamente.';
+          break;
+        case 404:
+          errorMessage = 'Recurso no encontrado.';
+          break;
+        case 409:
+          errorMessage = 'Ya existe un registro con esos datos.';
+          break;
+        case 500:
+          errorMessage = 'Error en el servidor. Intenta más tarde.';
+          break;
+        default:
+          errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
+      }
       
-      console.error('Error de respuesta:', error.response.status, error.response.data);
+      errorDetails = error.response.data;
     } else if (error.request) {
       // La petición fue hecha pero no se recibió respuesta
-      showDebugAlert(`❌ No se recibió respuesta del servidor | ${error.config?.method?.toUpperCase()} ${error.config?.url}`, 'error');
-      console.error('Error de conexión:', error.request);
-    } else {
-      // Algo ocurrió durante la configuración de la petición
-      showDebugAlert(`🔴 Error: ${error.message}`, 'error');
-      console.error('Error de configuración:', error.message);
+      errorMessage = 'No se recibió respuesta del servidor. Verifica tu conexión o intenta más tarde.';
     }
     
-    return Promise.reject(error);
+    // Personalizar el objeto de error para facilitar su manejo
+    const customError = new Error(errorMessage);
+    customError.originalError = error;
+    customError.details = errorDetails;
+    customError.type = error.response ? 'server' : 'network';
+    
+    // Log del error para depuración
+    console.error('Error en API:', {
+      message: errorMessage,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    
+    return Promise.reject(customError);
   }
 );
 
@@ -117,7 +91,6 @@ const patientService = {
   // Verificar paciente por DNI
   checkPatientByDni: async (dni) => {
     try {
-      showDebugAlert(`Verificando DNI: ${dni}`, 'info');
       const response = await API.get(`/patients/check/${dni}`);
       return response.data;
     } catch (error) {
@@ -129,8 +102,27 @@ const patientService = {
   // Registrar nuevo paciente
   registerPatient: async (patientData) => {
     try {
-      showDebugAlert(`Registrando paciente con DNI: ${patientData.dni}`, 'info');
-      const response = await API.post('/patients', patientData);
+      // Formatear los datos para asegurar compatibilidad con la API
+      const formattedData = {
+        ...patientData,
+        // Asegurar que ciertos campos sean string
+        dni: String(patientData.dni),
+        // Convertir a números si es necesario
+        peso: patientData.peso ? Number(patientData.peso) : null,
+        talla: patientData.talla ? Number(patientData.talla) : null,
+        // Asegurar que los campos vacíos sean null y no cadenas vacías
+        email: patientData.email || null,
+        telefono: patientData.telefono || null,
+        calle: patientData.calle || null,
+        numero: patientData.numero || null,
+        piso: patientData.piso || null,
+        departamento: patientData.departamento || null,
+        ciudad: patientData.ciudad || null,
+        provincia: patientData.provincia || null,
+        cpostal: patientData.cpostal || null
+      };
+      
+      const response = await API.post('/patients', formattedData);
       return response.data;
     } catch (error) {
       console.error('Error al registrar paciente:', error);
@@ -141,8 +133,20 @@ const patientService = {
   // Actualizar datos del paciente
   updatePatient: async (id, updatedData) => {
     try {
-      showDebugAlert(`Actualizando paciente ID: ${id}`, 'info');
-      const response = await API.put(`/patients/${id}`, updatedData);
+      // Formatear los datos para evitar enviar campos vacíos como cadenas vacías
+      const formattedData = Object.fromEntries(
+        Object.entries(updatedData)
+          .filter(([_, value]) => value !== '')
+          .map(([key, value]) => {
+            // Convertir a número los campos numéricos
+            if (key === 'peso' || key === 'talla') {
+              return [key, value ? Number(value) : null];
+            }
+            return [key, value];
+          })
+      );
+      
+      const response = await API.put(`/patients/${id}`, formattedData);
       return response.data;
     } catch (error) {
       console.error('Error al actualizar paciente:', error);
@@ -153,7 +157,6 @@ const patientService = {
   // Obtener próximas citas médicas del paciente
   getPatientAppointments: async (patientId) => {
     try {
-      showDebugAlert(`Obteniendo citas para paciente ID: ${patientId}`, 'info');
       const response = await API.get(`/patients/${patientId}/appointments`);
       return response.data;
     } catch (error) {
@@ -165,7 +168,6 @@ const patientService = {
   // Obtener recetas médicas del paciente
   getPatientPrescriptions: async (patientId) => {
     try {
-      showDebugAlert(`Obteniendo recetas para paciente ID: ${patientId}`, 'info');
       const response = await API.get(`/patients/${patientId}/prescriptions`);
       return response.data;
     } catch (error) {
@@ -177,7 +179,6 @@ const patientService = {
   // Obtener estudios médicos del paciente
   getPatientMedicalTests: async (patientId) => {
     try {
-      showDebugAlert(`Obteniendo estudios médicos para paciente ID: ${patientId}`, 'info');
       const response = await API.get(`/patients/${patientId}/medical-tests`);
       return response.data;
     } catch (error) {
