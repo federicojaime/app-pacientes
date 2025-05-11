@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediApp - Escaneo de DNI</title>
+    <style>
+      /* Estilos específicos para la cámara */
+      video {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* Animación de escaneo */
+      @keyframes scanline {
+        0% { top: 0; }
+        50% { top: calc(100% - 3px); }
+        100% { top: 0; }
+      }
+
+      /* Forzar visibilidad */
+      .camera-container {
+        z-index: 1000 !important;
+        position: relative !important;
+      }
+      
+      /* Asegurar que la cámara tenga prioridad visual */
+      video::-webkit-media-controls {
+        display: none !important;
+      }
+      
+      /* Evitar que sea ocultado por otros elementos */
+      .camera-active {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
