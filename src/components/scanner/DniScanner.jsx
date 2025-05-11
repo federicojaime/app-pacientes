@@ -1,320 +1,220 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { BrowserMultiFormatReader, BarcodeFormat } from '@zxing/browser';
+import { FaCamera, FaQrcode, FaSpinner, FaTimes, FaKeyboard } from 'react-icons/fa';
 
-// Escáner puramente basado en la API navigator.mediaDevices
-// Sin dependencias externas que puedan causar problemas
 const DniScanner = ({ onDniScanned }) => {
-  const [scanning, setScanning] = useState(false);
-  const [error, setError] = useState(null);
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
+    const videoRef = useRef(null);
+    const [scanning, setScanning] = useState(false);
+    const [error, setError] = useState(null);
+    const [rawScan, setRawScan] = useState(null);
+    const [lastScan, setLastScan] = useState(null);
+    const [timeoutMsg, setTimeoutMsg] = useState(null);
+    const [scanTimeout, setScanTimeout] = useState(null);
+    const codeReader = useRef(null);
 
-  // Limpiar la cámara al desmontar el componente
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+    useEffect(() => {
+        return () => {
+            stopScanner();
+        };
+        // eslint-disable-next-line
+    }, []);
+
+    const startScanner = async () => {
+        setError(null);
+        setRawScan(null);
+        setLastScan(null);
+        setTimeoutMsg(null);
+        if (scanTimeout) clearTimeout(scanTimeout);
+        setScanning(true);
+        try {
+            codeReader.current = new BrowserMultiFormatReader();
+            const videoInputDevices = await BrowserMultiFormatReader.listVideoInputDevices();
+            // Buscar cámara trasera
+            let deviceId = null;
+            if (videoInputDevices.length === 0) throw new Error('No se encontró cámara disponible');
+            // Buscar por label (puede variar según el dispositivo)
+            const backCam = videoInputDevices.find(device =>
+                device.label.toLowerCase().includes('back') ||
+                device.label.toLowerCase().includes('trasera') ||
+                device.label.toLowerCase().includes('rear')
+            );
+            if (backCam) {
+                deviceId = backCam.deviceId;
+            } else {
+                deviceId = videoInputDevices[0].deviceId;
+            }
+            codeReader.current.decodeFromVideoDevice(
+                deviceId,
+                videoRef.current,
+                (result, err) => {
+                    if (result) {
+                        setRawScan(result.getText());
+                        setTimeoutMsg(null);
+                        if (scanTimeout) clearTimeout(scanTimeout);
+                        processPdf417Data(result.getText());
+                        stopScanner();
+                    } else if (err && !(err instanceof NotFoundException)) {
+                        setError('Error al escanear: ' + err);
+                    }
+                },
+                {
+                    formats: [BarcodeFormat.PDF_417],
+                }
+            );
+            // Timeout de 10 segundos para mostrar mensaje si no se escanea nada
+            const timeout = setTimeout(() => {
+                setTimeoutMsg("No se detectó ningún código. Intenta mover el DNI, mejorar la iluminación o enfocar mejor.");
+            }, 10000);
+            setScanTimeout(timeout);
+        } catch (err) {
+            setError(err.message || 'No se pudo iniciar la cámara. Verifica los permisos e intenta de nuevo.');
+            setScanning(false);
+        }
     };
-  }, []);
 
-  // Función para iniciar la cámara directamente sin bibliotecas externas
-  const startCamera = async () => {
-    try {
-      setScanning(true);
-      setError(null);
-      
-      // Verificar soporte de la cámara
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Tu navegador no soporta acceso a la cámara. Intenta con otro navegador.");
-      }
-
-      // Obtener acceso a la cámara trasera preferentemente
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+    const stopScanner = () => {
+        setScanning(false);
+        setTimeoutMsg(null);
+        if (scanTimeout) clearTimeout(scanTimeout);
+        if (codeReader.current) {
+            codeReader.current.reset();
         }
-      });
-      
-      // Guardar referencia al stream para poder limpiarlo después
-      streamRef.current = stream;
-      
-      // Conectar el stream al elemento de video
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Intentar forzar un tamaño más grande
-        videoRef.current.width = 1280;
-        videoRef.current.height = 720;
-      }
-    } catch (err) {
-      console.error('Error al iniciar la cámara:', err);
-      setError(err.message || "No se pudo iniciar la cámara. Verifica los permisos e intenta de nuevo.");
-      setScanning(false);
-    }
-  };
+    };
 
-  // Función para detener la cámara
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-      setScanning(false);
-    }
-  };
+    const processPdf417Data = (data) => {
+        try {
+            setLastScan(data);
+            // Extraer el DNI: buscar el primer número de 7 u 8 dígitos
+            let dni = null;
+            let parts = [];
+            if (data.includes('|')) {
+                parts = data.split('|');
+            } else if (data.includes('@')) {
+                parts = data.split('@');
+            }
+            dni = parts.find(p => /^\d{7,8}$/.test(p));
+            if (!dni) {
+                const dniMatch = data.match(/\b\d{7,8}\b/);
+                if (dniMatch) {
+                    dni = dniMatch[0];
+                }
+            }
+            if (dni && /^\d{7,8}$/.test(dni)) {
+                onDniScanned(dni);
+            } else {
+                setError("No se pudo extraer un DNI válido del código escaneado. Por favor, intenta de nuevo o ingresa el DNI manualmente.");
+                setLastScan(data);
+            }
+        } catch (err) {
+            setError("El código escaneado no contiene un DNI válido o no es un DNI argentino");
+        }
+    };
 
-  // Para implementación real, aquí iría la lógica de captura y procesamiento del código PDF417
-  // Por ahora simulamos el escaneo con un botón
-  const simulateScanning = () => {
-    // Detener la cámara
-    stopCamera();
-    
-    // Simular que encontramos un DNI válido
-    onDniScanned("38437748");
-  };
+    const enterDniManually = () => {
+        const dni = prompt("Ingresa el número de DNI:");
+        if (dni && /^\d{7,8}$/.test(dni)) {
+            onDniScanned(dni);
+        } else if (dni) {
+            alert("El DNI debe tener entre 7 y 8 dígitos");
+        }
+    };
 
-  const enterDniManually = () => {
-    const dni = prompt("Ingresa el número de DNI:");
-    if (dni && /^\d{7,8}$/.test(dni)) {
-      onDniScanned(dni);
-    } else if (dni) {
-      alert("El DNI debe tener entre 7 y 8 dígitos");
-    }
-  };
-
-  return (
-    <div style={{
-      maxWidth: "500px",
-      margin: "0 auto",
-      padding: "20px",
-      backgroundColor: "#ffffff",
-      borderRadius: "10px",
-      boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-    }}>
-      <h2 style={{
-        fontSize: "24px",
-        fontWeight: "bold",
-        textAlign: "center",
-        marginBottom: "20px",
-        color: "#333333"
-      }}>
-        Escanear DNI
-      </h2>
-      
-      <p style={{
-        textAlign: "center",
-        marginBottom: "20px",
-        color: "#666666"
-      }}>
-        Coloca el código de barras PDF417 frente a la cámara
-      </p>
-
-      <div style={{
-        width: "100%",
-        height: "300px",
-        backgroundColor: "#2a3f5f",
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: "8px",
-        marginBottom: "20px"
-      }}>
-        {scanning ? (
-          <>
-            {/* Video element para mostrar la cámara */}
-            <video 
-              ref={videoRef}
-              autoPlay 
-              playsInline
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover"
-              }}
-              onLoadedMetadata={() => {
-                // Intentar iniciar el video cuando los metadatos estén cargados
-                videoRef.current.play();
-              }}
-            />
-            
-            {/* Guía de posicionamiento */}
-            <div style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "250px",
-              height: "80px",
-              border: "4px solid #00BFFF",
-              borderRadius: "8px",
-              pointerEvents: "none"
-            }}>
-              <div style={{
-                position: "absolute",
-                top: "0",
-                left: "0",
-                width: "100%",
-                height: "3px",
-                backgroundColor: "#00BFFF",
-                animation: "scanline 2s linear infinite"
-              }}></div>
-            </div>
-            
-            {/* Texto de ayuda */}
-            <div style={{
-              position: "absolute",
-              bottom: "20px",
-              left: "0",
-              right: "0",
-              textAlign: "center"
-            }}>
-              <p style={{
-                display: "inline-block",
-                backgroundColor: "rgba(0,0,0,0.7)",
-                color: "white",
-                padding: "8px 16px",
-                borderRadius: "20px",
-                fontSize: "14px"
-              }}>
-                Alinea el código de barras dentro del recuadro
-              </p>
-            </div>
-            
-            {/* Botón para simular escaneo exitoso */}
-            <div style={{
-              position: "absolute",
-              top: "10px",
-              right: "10px"
-            }}>
-              <button 
-                onClick={simulateScanning}
-                style={{
-                  backgroundColor: "#18a2b8",
-                  color: "white",
-                  border: "none",
-                  padding: "5px 10px",
-                  borderRadius: "5px",
-                  fontSize: "12px",
-                  cursor: "pointer"
-                }}
-              >
-                Simular Escaneo
-              </button>
-            </div>
-          </>
-        ) : (
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%",
-            color: "white"
-          }}>
-            <div style={{
-              backgroundColor: "white",
-              padding: "10px",
-              borderRadius: "8px",
-              marginBottom: "15px"
-            }}>
-              <div style={{
-                width: "180px",
-                height: "80px",
-                border: "3px solid #18a2b8",
-                borderRadius: "5px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: "12px", color: "#333" }}>PDF417</div>
-                  <div style={{ fontSize: "10px", color: "#666", marginTop: "5px" }}>Código en reverso del DNI</div>
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all duration-200">
+            <div className="p-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-4">
+                    Escanear DNI
+                </h2>
+                <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
+                    Coloca el código PDF417 del reverso de tu DNI frente a la cámara
+                </p>
+                <div className="relative w-full h-64 bg-gray-900 rounded-lg overflow-hidden mb-4 flex items-center justify-center">
+                    {scanning ? (
+                        <video
+                            ref={videoRef}
+                            className="w-full h-full object-cover rounded-lg"
+                            style={{ zIndex: 1 }}
+                            autoPlay
+                            muted
+                        />
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-white w-full">
+                            <div className="bg-white/10 p-6 rounded-xl mb-4">
+                                <div className="w-36 h-16 border-2 border-primary-400 rounded flex items-center justify-center">
+                                    <div className="text-center">
+                                        <FaQrcode className="mx-auto text-primary-400 text-xl mb-1" />
+                                        <span className="text-xs text-gray-300">Código PDF417</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-gray-300 text-sm">
+                                Presiona el botón para activar la cámara
+                            </p>
+                        </div>
+                    )}
+                    {/* Guía visual */}
+                    {scanning && (
+                        <>
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-24 border-2 border-primary-400 rounded-md pointer-events-none" style={{zIndex: 2}}>
+                                <div className="absolute top-0 left-0 w-full h-0.5 bg-primary-400 scanner-animation"></div>
+                            </div>
+                            <div className="absolute bottom-4 left-0 right-0 text-center" style={{zIndex: 2}}>
+                                <p className="inline-block px-3 py-1 bg-black/70 text-white text-sm rounded-full">
+                                    Alinea el código PDF417 dentro del marco
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
-              </div>
+                {/* Carteles de feedback */}
+                {timeoutMsg && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 p-3 rounded-lg mb-2" style={{zIndex: 10}}>
+                        <strong>{timeoutMsg}</strong>
+                    </div>
+                )}
+                {rawScan && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-400 p-3 rounded-lg mb-2" style={{zIndex: 10}}>
+                        <strong>Texto escaneado:</strong>
+                        <div className="break-all text-xs mt-1">{rawScan}</div>
+                    </div>
+                )}
+                {lastScan && !error && (
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 p-3 rounded-lg mb-2" style={{zIndex: 10}}>
+                        <strong>Último intento de extracción:</strong>
+                        <div className="break-all text-xs mt-1">{lastScan}</div>
+                    </div>
+                )}
+                {error && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4" style={{zIndex: 10}}>
+                        {error}
+                    </div>
+                )}
+                <div className="flex flex-col gap-3">
+                    {!scanning ? (
+                        <button
+                            onClick={startScanner}
+                            className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                            <FaCamera /> Iniciar cámara
+                        </button>
+                    ) : (
+                        <button
+                            onClick={stopScanner}
+                            className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                            <FaTimes /> Cancelar
+                        </button>
+                    )}
+                    <button
+                        onClick={enterDniManually}
+                        className="w-full py-2.5 border border-primary-500 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                    >
+                        <FaKeyboard /> Ingresar DNI manualmente
+                    </button>
+                </div>
             </div>
-            <p style={{color: "white", fontWeight: "500"}}>
-              Presiona el botón para activar la cámara
-            </p>
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <div style={{
-          backgroundColor: "#ffebee",
-          color: "#d32f2f",
-          padding: "10px",
-          borderRadius: "5px",
-          marginBottom: "20px",
-          textAlign: "center"
-        }}>
-          {error}
         </div>
-      )}
-
-      {!scanning ? (
-        <button 
-          onClick={startCamera}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#18a2b8",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            marginBottom: "10px"
-          }}
-        >
-          Iniciar cámara
-        </button>
-      ) : (
-        <button 
-          onClick={stopCamera}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#bb1e3b",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            fontSize: "16px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            marginBottom: "10px"
-          }}
-        >
-          Cancelar
-        </button>
-      )}
-
-      <button 
-        onClick={enterDniManually}
-        style={{
-          width: "100%",
-          padding: "10px",
-          backgroundColor: "transparent",
-          color: "#18a2b8",
-          border: "1px solid #18a2b8",
-          borderRadius: "5px",
-          fontSize: "14px",
-          cursor: "pointer"
-        }}
-      >
-        Ingresar DNI manualmente
-      </button>
-      
-      <style jsx>{`
-        @keyframes scanline {
-          0% { top: 0; }
-          50% { top: calc(100% - 3px); }
-          100% { top: 0; }
-        }
-      `}</style>
-    </div>
-  );
+    );
 };
 
 export default DniScanner;
