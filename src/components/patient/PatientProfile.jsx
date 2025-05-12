@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FaUser, FaIdCard,FaInfoCircle, FaMapMarkerAlt, FaPhone, FaEnvelope, FaPencilAlt, FaSave, FaTimes, FaWeight, FaRulerVertical, FaHospital } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaUser, FaIdCard, FaInfoCircle, FaMapMarkerAlt, FaPhone, FaEnvelope, 
+         FaPencilAlt, FaSave, FaTimes, FaWeight, FaRulerVertical, FaHospital, 
+         FaCalendarAlt, FaVenusMars, FaGenderless } from 'react-icons/fa';
 
 const PatientProfile = ({ patient, onSave }) => {
   const [editableFields, setEditableFields] = useState({
@@ -151,9 +153,13 @@ const PatientProfile = ({ patient, onSave }) => {
     nombre: { icon: <FaUser />, label: 'Nombre', value: patient?.nombre },
     apellido: { icon: <FaUser />, label: 'Apellido', value: patient?.apellido },
     dni: { icon: <FaIdCard />, label: 'DNI', value: patient?.dni },
-    sexo: { icon: <FaUser />, label: 'Sexo', value: patient?.sexo === 'M' ? 'Masculino' : 'Femenino' },
+    sexo: { 
+      icon: patient?.sexo === 'M' ? <FaVenusMars /> : patient?.sexo === 'F' ? <FaVenusMars /> : <FaGenderless />, 
+      label: 'Sexo', 
+      value: patient?.sexo === 'M' ? 'Masculino' : patient?.sexo === 'F' ? 'Femenino' : 'No especificado' 
+    },
     fecnac: { 
-      icon: <FaUser />, 
+      icon: <FaCalendarAlt />, 
       label: 'Fecha de Nacimiento', 
       value: patient?.fecnac 
         ? new Date(patient.fecnac).toLocaleDateString('es-AR', {
@@ -260,62 +266,93 @@ const PatientProfile = ({ patient, onSave }) => {
     const error = validations[key];
     
     return (
-      <div key={key} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-3 transition-all duration-200">
+      <motion.div 
+        key={key} 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-3 transition-all duration-200"
+      >
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-gray-800 dark:text-white">
-            {config.icon && <span className="text-primary-500">{config.icon}</span>}
+            {config.icon && <span className="text-primary-main dark:text-primary-light">{config.icon}</span>}
             <span className="font-medium">{config.label}:</span>
           </div>
           {isEditing ? (
             <div className="flex gap-2">
-              <button 
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handleSave(key)}
-                className="p-1 text-green-500 hover:text-green-600 transition-colors"
+                className="p-1.5 text-green-500 hover:text-green-600 transition-colors"
                 aria-label="Guardar"
                 disabled={!!error}
               >
                 <FaSave />
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
                 onClick={() => handleCancel(key)}
-                className="p-1 text-red-500 hover:text-red-600 transition-colors"
+                className="p-1.5 text-red-500 hover:text-red-600 transition-colors"
                 aria-label="Cancelar"
               >
                 <FaTimes />
-              </button>
+              </motion.button>
             </div>
           ) : (
-            <button 
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleEdit(key)}
-              className="p-1 text-gray-500 hover:text-primary-500 transition-colors"
+              className="p-1.5 text-gray-500 hover:text-primary-500 transition-colors"
               aria-label="Editar"
             >
               <FaPencilAlt />
-            </button>
+            </motion.button>
           )}
         </div>
 
-        {isEditing ? (
-          <div className="mt-2">
-            <input
-              type={config.type}
-              value={editableFields[key]}
-              onChange={(e) => handleChange(key, e.target.value)}
-              onBlur={() => handleBlur(key)}
-              className={`w-full px-3 py-2 border ${error ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-              placeholder={config.placeholder}
-              autoFocus
-            />
-            {error && (
-              <p className="mt-1 text-sm text-red-500 dark:text-red-400">{error}</p>
-            )}
-          </div>
-        ) : (
-          <div className="mt-1 text-gray-700 dark:text-gray-300">
-            {editableFields[key] || <span className="text-gray-400 dark:text-gray-500 italic">Sin datos</span>}
-          </div>
-        )}
-      </div>
+        <AnimatePresence mode="wait">
+          {isEditing ? (
+            <motion.div 
+              key="editing"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-2"
+            >
+              <input
+                type={config.type}
+                value={editableFields[key]}
+                onChange={(e) => handleChange(key, e.target.value)}
+                onBlur={() => handleBlur(key)}
+                className={`w-full px-3 py-2 border ${error ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
+                placeholder={config.placeholder}
+                autoFocus
+              />
+              {error && (
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-1 text-sm text-red-500 dark:text-red-400"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="view"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-1 text-gray-700 dark:text-gray-300"
+            >
+              {editableFields[key] || <span className="text-gray-400 dark:text-gray-500 italic">Sin datos</span>}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     );
   };
 
@@ -323,66 +360,108 @@ const PatientProfile = ({ patient, onSave }) => {
     const config = readOnlyFields[key];
     
     return (
-      <div key={key} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-3">
+      <motion.div 
+        key={key} 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-3"
+      >
         <div className="flex items-center gap-2 text-gray-800 dark:text-white">
-          <span className="text-primary-500">{config.icon}</span>
+          <span className="text-primary-main dark:text-primary-light">{config.icon}</span>
           <span className="font-medium">{config.label}:</span>
         </div>
         <div className="mt-1 text-gray-700 dark:text-gray-300">
           {config.value || <span className="text-gray-400 dark:text-gray-500 italic">Sin datos</span>}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   // Verificar si hay algún campo en modo edición
   const isAnyFieldEditing = Object.values(editing).some(v => v);
 
+  // Configuración de animación para la tarjeta principal
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      initial="hidden"
+      animate="visible"
+      variants={cardVariants}
       className="w-full max-w-md mx-auto"
     >
-      <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-3xl shadow-lg p-6 mb-6">
+      {/* Tarjeta de perfil principal */}
+      <motion.div 
+        className="bg-gradient-to-br from-primary-main to-primary-dark rounded-3xl shadow-lg p-6 mb-6"
+        whileHover={{ y: -5 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md">
-            <FaUser className="text-3xl text-primary-500" />
+            <FaUser className="text-3xl text-primary-main" />
           </div>
           <div>
             <h2 className="text-white text-xl font-bold">{patient?.nombre} {patient?.apellido}</h2>
-            <p className="text-primary-100">DNI: {patient?.dni}</p>
+            <p className="text-primary-light/90">DNI: {patient?.dni}</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {isAnyFieldEditing && (
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-600 dark:text-blue-300">
-          <div className="flex items-center gap-2">
-            <FaInfoCircle className="text-blue-500" />
-            <p>Para guardar tus cambios, haz clic en el icono de guardado.</p>
-          </div>
-        </div>
-      )}
+      {/* Alerta de edición */}
+      <AnimatePresence>
+        {isAnyFieldEditing && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-600 dark:text-blue-300"
+          >
+            <div className="flex items-center gap-2">
+              <FaInfoCircle className="text-blue-500" />
+              <p>Para guardar tus cambios, haz clic en el icono de guardado.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Información Personal</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <FaUser className="mr-2 text-primary-main dark:text-primary-light" />
+          Información Personal
+        </h3>
         {Object.keys(readOnlyFields).map(renderReadOnlyField)}
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Información de Contacto</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <FaPhone className="mr-2 text-primary-main dark:text-primary-light" />
+          Información de Contacto
+        </h3>
         {['telefono', 'email'].map(renderEditableField)}
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Domicilio</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <FaMapMarkerAlt className="mr-2 text-primary-main dark:text-primary-light" />
+          Domicilio
+        </h3>
         {['calle', 'numero', 'piso', 'departamento', 'ciudad', 'provincia', 'cpostal'].map(renderEditableField)}
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Información Médica</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          <FaWeight className="mr-2 text-primary-main dark:text-primary-light" />
+          Información Médica
+        </h3>
         {['peso', 'talla'].map(renderEditableField)}
       </div>
     </motion.div>

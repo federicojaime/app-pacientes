@@ -1,32 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Paleta de colores 2025 */
+    --color-primary-main: #1E6091;
+    --color-primary-light: #3A87C4;
+    --color-primary-dark: #0A4B78;
+    
+    --color-secondary-main: #10B981;
+    --color-secondary-light: #34D399;
+    --color-secondary-dark: #059669;
+    
+    --color-accent-main: #8B5CF6;
+    --color-accent-light: #A78BFA;
+    --color-accent-dark: #7C3AED;
+    
+    --color-success-main: #10B981;
+    --color-error-main: #EF4444;
+    --color-warning-main: #F59E0B;
+    --color-info-main: #3B82F6;
+    
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  /* Personalizaciones generales */
+  body {
+    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+  
+  a {
+    @apply transition-colors duration-200;
+  }
+  
+  button {
+    @apply transition-all duration-200 font-medium;
+  }
+  
+  input, textarea, select {
+    @apply transition-all duration-200 focus:outline-none;
   }
 
   /* Configuración para mejor soporte de scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.25);
   }
 
   .dark ::-webkit-scrollbar-track {
@@ -38,7 +81,54 @@
   }
 
   .dark ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Componentes comunes con estilos de 2025 */
+@layer components {
+  .btn-primary {
+    @apply px-5 py-2.5 bg-primary-main hover:bg-primary-dark text-white font-medium rounded-lg shadow-sm;
+  }
+  
+  .btn-secondary {
+    @apply px-5 py-2.5 bg-secondary-main hover:bg-secondary-dark text-white font-medium rounded-lg shadow-sm;
+  }
+  
+  .btn-outline {
+    @apply px-5 py-2.5 border border-primary-main text-primary-main hover:bg-primary-main/5 font-medium rounded-lg;
+  }
+  
+  .btn-ghost {
+    @apply px-4 py-2 text-primary-main hover:bg-primary-main/5 font-medium rounded-lg;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+  
+  .form-input {
+    @apply w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-primary-main dark:text-white;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-primary-main/10 text-primary-main dark:bg-primary-main/20 dark:text-primary-light;
+  }
+  
+  .badge-secondary {
+    @apply bg-secondary-main/10 text-secondary-main dark:bg-secondary-main/20 dark:text-secondary-light;
+  }
+  
+  .badge-accent {
+    @apply bg-accent-main/10 text-accent-main dark:bg-accent-main/20 dark:text-accent-light;
   }
 }
 
@@ -77,4 +167,46 @@ video::-webkit-media-controls {
   visibility: visible !important;
   opacity: 1 !important;
   z-index: 1 !important;
+}
+
+/* Animaciones Adicionales 2025 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtlePulse 3s ease-in-out infinite;
+}
+
+/* Efecto de glassmorphism estilo 2025 */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glassmorphism {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }

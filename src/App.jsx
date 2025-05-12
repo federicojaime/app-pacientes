@@ -16,16 +16,16 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => {
     // Leer preferencia del usuario del localStorage
     const savedPreference = localStorage.getItem('darkMode');
-    return savedPreference ? JSON.parse(savedPreference) : 
+    return savedPreference ? JSON.parse(savedPreference) :
       // O usar preferencia del sistema
       window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
-  
+
   // Aplicar variables de color CSS según el tema
   useEffect(() => {
     const root = document.documentElement;
     const colorVars = getColorVariables();
-    
+
     // Aplicar todas las variables de color al elemento root
     Object.entries(colorVars).forEach(([key, value]) => {
       root.style.setProperty(key, value);
@@ -39,7 +39,7 @@ function App() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    
+
     // Guardar preferencia en localStorage
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
@@ -67,8 +67,8 @@ function App() {
             <main className="flex-grow px-4 py-6 md:px-6 pt-24">
               <AnimatePresence mode="wait">
                 <Routes>
-                  <Route 
-                    path="/" 
+                  <Route
+                    path="/"
                     element={
                       <motion.div
                         key="home"
@@ -80,10 +80,10 @@ function App() {
                       >
                         <HomePage />
                       </motion.div>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/scan" 
+                  <Route
+                    path="/scan"
                     element={
                       <motion.div
                         key="scan"
@@ -95,10 +95,10 @@ function App() {
                       >
                         <ScannerPage />
                       </motion.div>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/profile" 
+                  <Route
+                    path="/profile"
                     element={
                       <motion.div
                         key="profile"
@@ -110,10 +110,10 @@ function App() {
                       >
                         {patient ? <ProfilePage /> : <Navigate to="/scan" />}
                       </motion.div>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/register" 
+                  <Route
+                    path="/register"
                     element={
                       <motion.div
                         key="register"
@@ -125,7 +125,7 @@ function App() {
                       >
                         <RegisterPage />
                       </motion.div>
-                    } 
+                    }
                   />
                 </Routes>
               </AnimatePresence>

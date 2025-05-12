@@ -1,80 +1,84 @@
-// Configuración centralizada del tema de la aplicación MediApp
-// Colores del Consejo de Médicos de la Provincia de Córdoba
+// Configuración centralizada del tema de la aplicación MediApp - 2025 Edition
+// Colores del Consejo de Médicos de la Provincia de Córdoba (Modernizados)
 
 export const THEME = {
-    // Colores principales
+    // Colores principales - Paleta 2025 actualizada 
     colors: {
         primary: {
-            main: '#006699', // Azul principal del Consejo Médico
-            light: '#0088cc',
-            dark: '#004466',
+            main: '#1E6091', // Azul más profundo y moderno
+            light: '#3A87C4',
+            dark: '#0A4B78',
             contrastText: '#ffffff',
         },
         secondary: {
-            main: '#009966', // Verde/Turquesa del Consejo Médico
-            light: '#00cc88',
-            dark: '#006644',
+            main: '#10B981', // Verde/Turquesa moderno 
+            light: '#34D399',
+            dark: '#059669',
             contrastText: '#ffffff',
         },
         accent: {
-            main: '#6699cc', // Azul claro complementario
-            light: '#88bbee',
-            dark: '#4477aa',
+            main: '#8B5CF6', // Violeta como acento moderno de 2025
+            light: '#A78BFA',
+            dark: '#7C3AED',
             contrastText: '#ffffff',
         },
         error: {
-            main: '#d32f2f',
-            light: '#ef5350',
-            dark: '#c62828',
+            main: '#EF4444',
+            light: '#F87171',
+            dark: '#DC2626',
             contrastText: '#ffffff',
         },
         warning: {
-            main: '#f57c00',
-            light: '#ff9800',
-            dark: '#e65100',
+            main: '#F59E0B',
+            light: '#FBBF24',
+            dark: '#D97706',
             contrastText: '#ffffff',
         },
         info: {
-            main: '#0288d1',
-            light: '#03a9f4',
-            dark: '#01579b',
+            main: '#3B82F6',
+            light: '#60A5FA',
+            dark: '#2563EB',
             contrastText: '#ffffff',
         },
         success: {
-            main: '#2e7d32',
-            light: '#4caf50',
-            dark: '#1b5e20',
+            main: '#10B981',
+            light: '#34D399',
+            dark: '#059669',
             contrastText: '#ffffff',
         },
         background: {
             default: '#ffffff',
-            paper: '#f9f9f9',
-            subtle: '#f5f7fa',
-            darkMode: '#121212',
+            paper: '#f9fafb',
+            subtle: '#f3f4f6',
+            darkMode: '#111827',
         },
         text: {
-            primary: '#333333',
-            secondary: '#555555',
-            disabled: '#888888',
-            hint: '#777777',
-            darkModePrimary: '#f5f5f5',
-            darkModeSecondary: '#cccccc',
+            primary: '#1f2937',
+            secondary: '#4b5563',
+            disabled: '#9ca3af',
+            hint: '#6b7280',
+            darkModePrimary: '#f9fafb',
+            darkModeSecondary: '#e5e7eb',
         },
-        divider: '#e0e0e0',
-    },
-
-    // Rutas de los logos
-    logos: {
-        main: '/assets/logo-consejo-medicos.png',
-        icon: '/assets/icon-consejo-medicos.png',
-        miniLogo: '/assets/mini-logo-consejo-medicos.png',
-        lightMode: '/assets/logo-light-mode.png',
-        darkMode: '/assets/logo-dark-mode.png',
+        divider: '#e5e7eb',
+        // Colores UI neutros
+        gray: {
+            50: '#f9fafb',
+            100: '#f3f4f6',
+            200: '#e5e7eb',
+            300: '#d1d5db',
+            400: '#9ca3af',
+            500: '#6b7280',
+            600: '#4b5563',
+            700: '#374151',
+            800: '#1f2937',
+            900: '#111827',
+        }
     },
 
     // Tipografía
     typography: {
-        fontFamily: "'Montserrat', 'Roboto', 'Arial', sans-serif",
+        fontFamily: "'Inter', 'Montserrat', 'Roboto', sans-serif",
         fontSize: {
             xs: '0.75rem',
             sm: '0.875rem',
@@ -110,32 +114,32 @@ export const THEME = {
     borderRadius: {
         none: '0',
         sm: '0.125rem',
-        default: '0.25rem',
-        md: '0.375rem',
-        lg: '0.5rem',
-        xl: '0.75rem',
-        '2xl': '1rem',
-        '3xl': '1.5rem',
+        default: '0.375rem', // 2025: Bordes más suaves pero definidos
+        md: '0.5rem',
+        lg: '0.75rem',
+        xl: '1rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
         full: '9999px',
     },
 
-    // Sombras
+    // Sombras - Más sutiles para 2025
     shadows: {
         none: 'none',
-        sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        default: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-        lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+        sm: '0 1px 2px rgba(0, 0, 0, 0.04)',
+        default: '0 2px 4px rgba(0, 0, 0, 0.05)',
+        md: '0 4px 8px rgba(0, 0, 0, 0.05)',
+        lg: '0 8px 16px rgba(0, 0, 0, 0.06)',
+        xl: '0 12px 24px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.03)',
+        inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.03)',
     },
 
     // Animaciones
     animations: {
         transitionDuration: {
-            short: '150ms',
-            default: '300ms',
-            long: '500ms',
+            fast: '100ms',
+            default: '200ms',
+            slow: '400ms',
         },
         transitionEasing: {
             easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
@@ -148,10 +152,11 @@ export const THEME = {
     // Breakpoints para diseño responsive
     breakpoints: {
         xs: '0px',
-        sm: '600px',
-        md: '960px',
-        lg: '1280px',
-        xl: '1920px',
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1536px',
     },
 
     // Z-index para capas
@@ -171,26 +176,26 @@ export const THEME = {
 // Clases CSS personalizadas para aplicar el tema
 export const cssClasses = {
     buttons: {
-        primary: 'bg-primary-main hover:bg-primary-dark text-white font-medium rounded-lg transition-all duration-300 px-6 py-2.5 shadow-sm',
-        secondary: 'bg-secondary-main hover:bg-secondary-dark text-white font-medium rounded-lg transition-all duration-300 px-6 py-2.5 shadow-sm',
-        outlined: 'border border-primary-main text-primary-main hover:bg-primary-main/10 font-medium rounded-lg transition-all duration-300 px-6 py-2.5',
-        text: 'text-primary-main hover:bg-primary-main/10 font-medium rounded-lg transition-all duration-300 px-4 py-2',
-        icon: 'text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all duration-300',
+        primary: 'bg-primary-main hover:bg-primary-dark text-white font-medium rounded-lg transition-all duration-200 px-5 py-2.5 shadow-sm',
+        secondary: 'bg-secondary-main hover:bg-secondary-dark text-white font-medium rounded-lg transition-all duration-200 px-5 py-2.5 shadow-sm',
+        outlined: 'border border-primary-main text-primary-main hover:bg-primary-main/5 font-medium rounded-lg transition-all duration-200 px-5 py-2.5',
+        text: 'text-primary-main hover:bg-primary-main/5 font-medium rounded-lg transition-all duration-200 px-4 py-2',
+        icon: 'text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all duration-200',
     },
     cards: {
-        default: 'bg-white rounded-xl shadow-md p-6 transition-all duration-300',
-        hover: 'bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]',
-        elevated: 'bg-white rounded-xl shadow-lg p-6 transition-all duration-300',
+        default: 'bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-all duration-200',
+        hover: 'bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-all duration-200 hover:shadow-md hover:translate-y-[-2px]',
+        elevated: 'bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200',
     },
     inputs: {
-        default: 'w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-primary-main transition-all duration-300',
-        error: 'w-full px-4 py-2.5 border border-red-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300',
+        default: 'w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-main focus:border-primary-main transition-all duration-200',
+        error: 'w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-red-400 dark:border-red-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200',
     },
     text: {
-        title: 'text-2xl font-semibold text-gray-800',
-        subtitle: 'text-xl font-medium text-gray-700',
-        body: 'text-base text-gray-600',
-        small: 'text-sm text-gray-500',
+        title: 'text-2xl font-semibold text-gray-800 dark:text-white',
+        subtitle: 'text-xl font-medium text-gray-700 dark:text-gray-200',
+        body: 'text-base text-gray-600 dark:text-gray-300',
+        small: 'text-sm text-gray-500 dark:text-gray-400',
     },
     containers: {
         page: 'max-w-5xl mx-auto px-4 py-8',
