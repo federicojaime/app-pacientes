@@ -61,8 +61,8 @@ const Navbar = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-          ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'
-          : 'bg-white dark:bg-gray-900'
+        ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm'
+        : 'bg-white shadow-xl dark:bg-gray-900'
         }`}
     >
       <nav className="container mx-auto px-4 py-3">
@@ -116,8 +116,8 @@ const Navbar = () => {
               whileTap={{ scale: 0.9 }}
               onClick={toggleDarkMode}
               className={`p-2.5 rounded-full transition-colors ${darkMode
-                  ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               aria-label={darkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
             >
@@ -161,8 +161,8 @@ const Navbar = () => {
               whileTap={{ scale: 0.9 }}
               onClick={toggleDarkMode}
               className={`p-2 rounded-full transition-colors ${darkMode
-                  ? 'bg-gray-800 text-yellow-300'
-                  : 'bg-gray-100 text-gray-700'
+                ? 'bg-gray-800 text-yellow-300'
+                : 'bg-gray-100 text-gray-700'
                 }`}
               aria-label={darkMode ? 'Activar modo claro' : 'Activar modo oscuro'}
             >
