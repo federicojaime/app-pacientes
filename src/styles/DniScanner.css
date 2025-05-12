@@ -1,0 +1,215 @@
+/* Estilos específicos para la pantalla de escaneo de DNI */
+
+/* Fondo general de la aplicación */
+.app-container {
+    background-color: #fff;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+
+/* Estilos para el encabezado */
+.header-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1a2542;
+    text-align: center;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.header-subtitle {
+    font-size: 1rem;
+    color: #4a5568;
+    text-align: center;
+    max-width: 350px;
+    margin: 0 auto 1.5rem auto;
+    line-height: 1.5;
+}
+
+/* Estilos del contenedor de instrucciones */
+.instructions-container {
+    background-color: #edf3ff;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    margin: 1rem auto;
+    max-width: 350px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.instructions-title {
+    display: flex;
+    align-items: center;
+    color: #2563eb;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+}
+
+.instructions-title svg {
+    margin-right: 0.5rem;
+}
+
+/* Estilos para el listado numerado */
+.steps-container {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.step-item {
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+.step-item:last-child {
+    margin-bottom: 0;
+}
+
+.step-number {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    background-color: #ffffff;
+    color: #2563eb;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-right: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.step-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    color: #3259a8;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+}
+
+/* Estilo para el container de la cámara */
+.camera-container {
+    background-color: #f3f4f6;
+    border-radius: 0.75rem;
+    height: 300px;
+    width: 100%;
+    max-width: 350px;
+    margin: 1.5rem auto;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+    position: relative;
+}
+
+/* Estilo para los botones */
+.action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 350px;
+    padding: 0.875rem 1rem;
+    margin: 0.75rem auto;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.15s ease;
+}
+
+.action-button svg {
+    margin-right: 0.5rem;
+}
+
+.primary-button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.primary-button:hover {
+    background-color: #1d4ed8;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+.secondary-button {
+    background-color: #ffffff;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+}
+
+.secondary-button:hover {
+    background-color: #f9fafb;
+}
+
+/* Estilos para el guía de escaneo */
+.scan-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 40%;
+    border: 2px solid #2563eb;
+    border-radius: 0.25rem;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.7);
+    animation: scanner-line 2.5s linear infinite;
+}
+
+@keyframes scanner-line {
+    0% {
+        top: 0;
+        opacity: 0.6;
+    }
+
+    50% {
+        top: calc(100% - 2px);
+        opacity: 1;
+    }
+
+    100% {
+        top: 0;
+        opacity: 0.6;
+    }
+}
+
+/* Ajustes para dispositivos móviles */
+@media screen and (max-width: 640px) {
+    .instructions-container {
+        margin-left: 1rem;
+        margin-right: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+
+    .camera-container {
+        max-width: calc(100% - 2rem);
+        margin-left: 1rem;
+        margin-right: 1rem;
+        height: 250px;
+    }
+
+    .action-button {
+        max-width: calc(100% - 2rem);
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
+}

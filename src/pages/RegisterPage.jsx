@@ -1,10 +1,12 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaUserPlus, FaSpinner, FaArrowLeft, FaCheck } from 'react-icons/fa';
+import { FaUserPlus, FaSpinner, FaArrowLeft, FaCheck, FaIdCard, FaLock, FaInfoCircle } from 'react-icons/fa';
 import PatientContext from '../contexts/PatientContext';
 import patientService from '../services/patientService';
 import ErrorHandler from '../components/ui/ErrorHandler';
+// Importamos los estilos responsivos
+import '../utils/responsive.css';
 
 const RegisterPage = () => {
   const location = useLocation();
@@ -13,13 +15,15 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [step, setStep] = useState(1);
+  const [fromDniScan, setFromDniScan] = useState(false);
   
+  // Inicializar el formulario con los datos recibidos del escaneo del DNI si existen
   const [formData, setFormData] = useState({
     dni: location?.state?.dni || '',
-    nombre: '',
-    apellido: '',
-    sexo: 'M',
-    fecnac: '',
+    nombre: location?.state?.nombre || '',
+    apellido: location?.state?.apellido || '',
+    sexo: location?.state?.sexo || 'M',
+    fecnac: location?.state?.fecnac || '',
     email: '',
     telefono: '',
     calle: '',
@@ -37,6 +41,11 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    // Verificar si los datos vienen de un escaneo de DNI
+    if (location?.state?.fromDniScan) {
+      setFromDniScan(true);
+    }
+    
     // Validación del DNI
     if (formData.dni.length > 0 && !/^\d{7,8}$/.test(formData.dni)) {
       setErrors(prev => ({ ...prev, dni: 'El DNI debe tener entre 7 y 8 dígitos' }));
@@ -47,7 +56,7 @@ const RegisterPage = () => {
         return newErrors;
       });
     }
-  }, [formData.dni]);
+  }, [formData.dni, location?.state]);
 
   const validateStep1 = () => {
     const newErrors = {};
@@ -123,8 +132,57 @@ const RegisterPage = () => {
     setError(null);
   };
 
+  // Determinar si un campo debe estar bloqueado (solo lectura) por venir del escaneo del DNI
+  const isFieldReadOnly = (fieldName) => {
+    const fieldsFromDni = ['dni', 'nombre', 'apellido', 'sexo', 'fecnac'];
+    return fromDniScan && fieldsFromDni.includes(fieldName);
+  };
+
+  // Renderizado de campo de formulario con estado de solo lectura cuando corresponda
+  const renderFormField = (name, label, type = 'text', required = false, placeholder = '') => {
+    const readOnly = isFieldReadOnly(name);
+    
+    return (
+      <div>
+        <label 
+          htmlFor={name} 
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center"
+        >
+          {label} {required && <span className="text-red-500 ml-1">*</span>}
+          {readOnly && (
+            <FaLock className="text-gray-400 dark:text-gray-500 ml-2 text-xs" title="Campo obtenido del DNI" />
+          )}
+        </label>
+        <input
+          type={type}
+          id={name}
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          className={`w-full px-4 py-2 border ${
+            errors[name] 
+              ? 'border-red-300 dark:border-red-500' 
+              : readOnly 
+                ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800' 
+                : 'border-gray-300 dark:border-gray-600'
+          } rounded-lg focus:outline-none ${
+            !readOnly && 'focus:ring-2 focus:ring-primary-500'
+          } dark:bg-gray-700 dark:text-white ${
+            readOnly && 'cursor-not-allowed text-gray-700 dark:text-gray-300'
+          }`}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          disabled={readOnly}
+        />
+        {errors[name] && (
+          <p className="mt-1 text-sm text-red-500">{errors[name]}</p>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="container mx-auto max-w-md">
+    <div className="container mx-auto max-w-md mobile-full-width">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -142,6 +200,25 @@ const RegisterPage = () => {
         </p>
       </motion.div>
 
+      {fromDniScan && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 rounded-r-lg"
+        >
+          <div className="flex items-start gap-3">
+            <FaInfoCircle className="mt-0.5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+            <div>
+              <p className="text-blue-700 dark:text-blue-300 font-medium">Datos del DNI detectados</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                Los campos con información obtenida del DNI no pueden modificarse.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {error && (
         <div className="mb-6">
           <ErrorHandler 
@@ -156,7 +233,7 @@ const RegisterPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 md:p-8"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 md:p-8 mobile-compact"
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -171,96 +248,39 @@ const RegisterPage = () => {
         {/* Paso 1: Información Personal */}
         {step === 1 && (
           <div className="space-y-4">
-            <div>
-              <label htmlFor="dni" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                DNI *
-              </label>
-              <input
-                type="text"
-                id="dni"
-                name="dni"
-                value={formData.dni}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border ${errors.dni ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                placeholder="Ingresa tu DNI"
-                disabled={location?.state?.dni}
-              />
-              {errors.dni && (
-                <p className="mt-1 text-sm text-red-500">{errors.dni}</p>
-              )}
+            {renderFormField('dni', 'DNI', 'text', true, 'Ingresa tu DNI')}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderFormField('nombre', 'Nombre', 'text', true, 'Ingresa tu nombre')}
+              {renderFormField('apellido', 'Apellido', 'text', true, 'Ingresa tu apellido')}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Nombre *
-                </label>
-                <input
-                  type="text"
-                  id="nombre"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${errors.nombre ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                  placeholder="Ingresa tu nombre"
-                />
-                {errors.nombre && (
-                  <p className="mt-1 text-sm text-red-500">{errors.nombre}</p>
-                )}
-              </div>
-              
-              <div>
-                <label htmlFor="apellido" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Apellido *
-                </label>
-                <input
-                  type="text"
-                  id="apellido"
-                  name="apellido"
-                  value={formData.apellido}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${errors.apellido ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                  placeholder="Ingresa tu apellido"
-                />
-                {errors.apellido && (
-                  <p className="mt-1 text-sm text-red-500">{errors.apellido}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="sexo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label htmlFor="sexo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                   Sexo *
+                  {isFieldReadOnly('sexo') && (
+                    <FaLock className="text-gray-400 dark:text-gray-500 ml-2 text-xs" title="Campo obtenido del DNI" />
+                  )}
                 </label>
                 <select
                   id="sexo"
                   name="sexo"
                   value={formData.sexo}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
+                  className={`w-full px-4 py-2 border ${
+                    isFieldReadOnly('sexo') 
+                      ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-not-allowed' 
+                      : 'border-gray-300 dark:border-gray-600'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
+                  disabled={isFieldReadOnly('sexo')}
                 >
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
               </div>
               
-              <div>
-                <label htmlFor="fecnac" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Fecha de Nacimiento *
-                </label>
-                <input
-                  type="date"
-                  id="fecnac"
-                  name="fecnac"
-                  value={formData.fecnac}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${errors.fecnac ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                />
-                {errors.fecnac && (
-                  <p className="mt-1 text-sm text-red-500">{errors.fecnac}</p>
-                )}
-              </div>
+              {renderFormField('fecnac', 'Fecha de Nacimiento', 'date', true)}
             </div>
           </div>
         )}
@@ -269,182 +289,27 @@ const RegisterPage = () => {
         {step === 2 && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${errors.email ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                  placeholder="Ingresa tu email"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-                )}
-              </div>
-              
-              <div>
-                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  id="telefono"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border ${errors.telefono ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white`}
-                  placeholder="Ingresa tu teléfono"
-                />
-                {errors.telefono && (
-                  <p className="mt-1 text-sm text-red-500">{errors.telefono}</p>
-                )}
-              </div>
+              {renderFormField('email', 'Email', 'email', false, 'Ingresa tu email')}
+              {renderFormField('telefono', 'Teléfono', 'tel', false, 'Ingresa tu teléfono')}
             </div>
 
-            <div>
-              <label htmlFor="calle" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Calle
-              </label>
-              <input
-                type="text"
-                id="calle"
-                name="calle"
-                value={formData.calle}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Ingresa tu calle"
-              />
+            {renderFormField('calle', 'Calle', 'text', false, 'Ingresa tu calle')}
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 input-group-mobile">
+              {renderFormField('numero', 'Número', 'text', false, 'Nº')}
+              {renderFormField('piso', 'Piso', 'text', false, 'Piso')}
+              {renderFormField('departamento', 'Depto.', 'text', false, 'Depto.')}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <label htmlFor="numero" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Número
-                </label>
-                <input
-                  type="text"
-                  id="numero"
-                  name="numero"
-                  value={formData.numero}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Nº"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="piso" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Piso
-                </label>
-                <input
-                  type="text"
-                  id="piso"
-                  name="piso"
-                  value={formData.piso}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Piso"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="departamento" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Depto.
-                </label>
-                <input
-                  type="text"
-                  id="departamento"
-                  name="departamento"
-                  value={formData.departamento}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Depto."
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label htmlFor="ciudad" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Ciudad
-                </label>
-                <input
-                  type="text"
-                  id="ciudad"
-                  name="ciudad"
-                  value={formData.ciudad}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Ciudad"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="provincia" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Provincia
-                </label>
-                <input
-                  type="text"
-                  id="provincia"
-                  name="provincia"
-                  value={formData.provincia}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Provincia"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="cpostal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Código Postal
-                </label>
-                <input
-                  type="text"
-                  id="cpostal"
-                  name="cpostal"
-                  value={formData.cpostal}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="CP"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 input-group-mobile">
+              {renderFormField('ciudad', 'Ciudad', 'text', false, 'Ciudad')}
+              {renderFormField('provincia', 'Provincia', 'text', false, 'Provincia')}
+              {renderFormField('cpostal', 'Código Postal', 'text', false, 'CP')}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="peso" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Peso (kg)
-                </label>
-                <input
-                  type="number"
-                  id="peso"
-                  name="peso"
-                  value={formData.peso}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Peso en kg"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="talla" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Talla (cm)
-                </label>
-                <input
-                  type="number"
-                  id="talla"
-                  name="talla"
-                  value={formData.talla}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Talla en cm"
-                />
-              </div>
+              {renderFormField('peso', 'Peso (kg)', 'number', false, 'Peso en kg')}
+              {renderFormField('talla', 'Talla (cm)', 'number', false, 'Talla en cm')}
             </div>
           </div>
         )}
@@ -454,7 +319,7 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={prevStep}
-              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2 btn-mobile-lg"
               disabled={loading}
             >
               <FaArrowLeft /> Atrás
@@ -463,7 +328,7 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2"
+              className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2 btn-mobile-lg"
               disabled={loading}
             >
               <FaArrowLeft /> Cancelar
@@ -473,7 +338,7 @@ const RegisterPage = () => {
           <button
             type="button"
             onClick={nextStep}
-            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 btn-mobile-lg"
             disabled={loading}
           >
             {loading ? (

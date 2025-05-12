@@ -1,0 +1,178 @@
+/* Estilos para la animación del escáner */
+
+.scanner-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.scan-border {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 40%;
+    border: 2px solid #3b82f6;
+    border-radius: 8px;
+    z-index: 5;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+    pointer-events: none;
+}
+
+.scan-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+}
+
+.corner-top-left {
+    top: 0;
+    left: 0;
+    border-top: 3px solid #3b82f6;
+    border-left: 3px solid #3b82f6;
+    border-top-left-radius: 4px;
+}
+
+.corner-top-right {
+    top: 0;
+    right: 0;
+    border-top: 3px solid #3b82f6;
+    border-right: 3px solid #3b82f6;
+    border-top-right-radius: 4px;
+}
+
+.corner-bottom-left {
+    bottom: 0;
+    left: 0;
+    border-bottom: 3px solid #3b82f6;
+    border-left: 3px solid #3b82f6;
+    border-bottom-left-radius: 4px;
+}
+
+.corner-bottom-right {
+    bottom: 0;
+    right: 0;
+    border-bottom: 3px solid #3b82f6;
+    border-right: 3px solid #3b82f6;
+    border-bottom-right-radius: 4px;
+}
+
+.scan-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+            rgba(59, 130, 246, 0.1) 0%,
+            rgba(59, 130, 246, 0.8) 50%,
+            rgba(59, 130, 246, 0.1) 100%);
+    z-index: 6;
+    animation: scan-animation 2.5s linear infinite;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+@keyframes scan-animation {
+    0% {
+        top: 0%;
+        opacity: 0.5;
+    }
+
+    50% {
+        top: calc(100% - 2px);
+        opacity: 1;
+    }
+
+    100% {
+        top: 0%;
+        opacity: 0.5;
+    }
+}
+
+/* Cámara activa - asegurarnos que el video llena todo el contenedor */
+.camera-active {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* Mensaje debajo del escáner */
+.scan-message {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+/* Estilos para el botón de cámara */
+.camera-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2563eb;
+    color: white;
+    width: 100%;
+    max-width: 350px;
+    margin: 16px auto;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+}
+
+.camera-button:hover {
+    background-color: #1d4ed8;
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+}
+
+.camera-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.4);
+}
+
+.camera-button-icon {
+    margin-right: 8px;
+}
+
+/* Estilos para dispositivos móviles */
+@media screen and (max-width: 640px) {
+    .scanner-container {
+        height: 250px;
+        max-width: 100%;
+    }
+
+    .scan-border {
+        width: 85%;
+        height: 45%;
+    }
+
+    .camera-button {
+        width: calc(100% - 32px);
+        margin-left: 16px;
+        margin-right: 16px;
+        padding: 14px 16px;
+    }
+
+    .scan-message {
+        font-size: 12px;
+        padding: 4px 10px;
+        bottom: 12px;
+    }
+}
