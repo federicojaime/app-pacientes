@@ -54,6 +54,7 @@ const ScannerPage = () => {
     setLoading(true);
     setError(null);
     setScanData(dniScanData);
+    console.log('dniScanData', dniScanData);
 
     try {
       // Notificación simple sin detalles técnicos
@@ -92,7 +93,7 @@ const ScannerPage = () => {
       } else {
         // Si el paciente no existe, redirigimos al registro con todos los datos escaneados
         const formattedData = {
-          dni: dniScanData.dni,
+          dni: dni,
           nombre: dniScanData.nombre,
           apellido: dniScanData.apellido,
           sexo: dniScanData.genero,

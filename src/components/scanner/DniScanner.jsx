@@ -130,16 +130,15 @@ const DniScanner = ({ onDniScanned }) => {
 
                     // Verificar que el DNI tenga el formato correcto (7-8 dígitos)
                     if (/^\d{7,8}$/.test(dni)) {
-                        setScannedData({
-                            dni,
-                            apellido,
-                            nombre,
-                            genero,
-                            fechaNac
-                        });
+                        const parsedData = { dni, apellido, nombre, genero, fechaNac };
 
-                        // Notificar el DNI escaneado correctamente
-                        onDniScanned(dni);
+                        setScannedData(parsedData);
+                        console.log("Datos escaneados:", parsedData);
+                        console.log("LLAME ACA");
+                        console.log(parsedData);
+
+                        // Usá el objeto directamente
+                        onDniScanned(dni, parsedData);
                     } else {
                         setError(`El DNI encontrado (${dni}) no tiene el formato correcto. Debe tener entre 7 y 8 dígitos.`);
                     }
