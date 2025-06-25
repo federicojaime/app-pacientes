@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaIdCard, FaSpinner, FaInfoCircle, FaQrcode, FaExclamationTriangle, FaNetworkWired } from 'react-icons/fa';
+import { FaIdCard, FaSpinner, FaInfoCircle, FaQrcode, FaExclamationTriangle, FaNetworkWired, FaSync } from 'react-icons/fa';
 import DniScanner from '../components/scanner/DniScanner';
 import patientService from '../services/patientService';
 import PatientContext from '../contexts/PatientContext';
@@ -50,6 +50,42 @@ const ScannerPage = () => {
     return `${parts[2]}-${parts[1]}-${parts[0]}`;
   };
 
+  // Función para mostrar notificaciones
+  const showNotification = (message, type = 'success', details = null) => {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
+    const icon = type === 'success' ? 
+      '<svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' :
+      type === 'warning' ?
+      '<svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>' :
+      '<svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>';
+
+    notification.className = `fixed top-4 right-4 p-4 ${bgColor} text-white rounded-lg shadow-lg z-50 max-w-xs animate-fadeIn`;
+    notification.innerHTML = `
+      <div class="flex items-start gap-2">
+        <div class="mt-0.5">${icon}</div>
+        <div>
+          <p class="font-bold">${message}</p>
+          ${details ? `<p class="text-sm mt-1">${details}</p>` : ''}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(notification);
+
+    // Remover la notificación después del tiempo especificado
+    const duration = type === 'error' ? 5000 : 3000;
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        notification.classList.add('animate-fadeOut');
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        }, 300);
+      }
+    }, duration);
+  };
+
   const handleDniScanned = async (dni, dniScanData) => {
     setLoading(true);
     setError(null);
@@ -57,50 +93,50 @@ const ScannerPage = () => {
     console.log('dniScanData', dniScanData);
 
     try {
-      // Notificación simple sin detalles técnicos
-      const notification = document.createElement('div');
-      notification.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 max-w-xs animate-fadeIn';
-      notification.innerHTML = `
-        <div class="flex items-start gap-2">
-          <div class="mt-0.5"><svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg></div>
-          <div>
-            <p class="font-bold">DNI escaneado: ${dni}</p>
-            <p class="text-sm mt-1">Verificando en el sistema...</p>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(notification);
+      // Notificación inicial
+      showNotification(`DNI escaneado: ${dni}`, 'success', 'Verificando en el sistema...');
 
-      // Remover la notificación después de 3 segundos
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          notification.classList.add('animate-fadeOut');
-          setTimeout(() => {
-            if (document.body.contains(notification)) {
-              document.body.removeChild(notification);
-            }
-          }, 300);
-        }
-      }, 3000);
-
-      // Consultar la API
-      const result = await patientService.checkPatientByDni(dni);
+      // Consultar la API con los datos del escaneo
+      const result = await patientService.checkPatientByDni(dni, dniScanData);
 
       if (result.exists && result.patient) {
-        // Si el paciente existe, guardamos sus datos y redirigimos al perfil
+        // Verificar si se actualizaron los datos
+        if (result.updated) {
+          showNotification(
+            'Datos actualizados automáticamente', 
+            'warning', 
+            'Se actualizó la información con los datos del DNI escaneado'
+          );
+          
+          // Mostrar un mensaje más detallado de los cambios
+          console.log('Paciente actualizado con datos del DNI:', result.patient);
+        } else {
+          showNotification(
+            'Paciente encontrado', 
+            'success', 
+            'Accediendo a tu perfil...'
+          );
+        }
+
+        // Guardar el paciente (actualizado o no) y redirigir al perfil
         setPatient(result.patient);
         navigate('/profile');
       } else {
-        // Si el paciente no existe, redirigimos al registro con todos los datos escaneados
+        // Si el paciente no existe, redirigir al registro con todos los datos escaneados
         const formattedData = {
           dni: dni,
           nombre: dniScanData.nombre,
           apellido: dniScanData.apellido,
           sexo: dniScanData.genero,
           fecnac: formatDateToISO(dniScanData.fechaNac),
-          // Los campos a continuación quedarán vacíos para que el usuario los complete
           fromDniScan: true // Marcamos que los datos vienen del escaneo
         };
+
+        showNotification(
+          'Paciente no registrado', 
+          'warning', 
+          'Redirigiendo al formulario de registro...'
+        );
 
         navigate('/register', { state: formattedData });
       }
@@ -108,31 +144,12 @@ const ScannerPage = () => {
       console.error('Error al verificar el DNI:', error);
       setError(error);
 
-      // Mostrar una notificación de error
-      const errorNotification = document.createElement('div');
-      errorNotification.className = 'fixed top-4 right-4 p-4 bg-red-500 text-white rounded-lg shadow-lg z-50 max-w-xs animate-fadeIn';
-      errorNotification.innerHTML = `
-        <div class="flex items-start gap-2">
-          <div class="mt-0.5"><svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></div>
-          <div>
-            <p class="font-bold">Error de verificación</p>
-            <p class="text-sm mt-1">${error.message || 'No se pudo verificar el DNI. Intenta nuevamente.'}</p>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(errorNotification);
-
-      // Remover la notificación de error después de 5 segundos
-      setTimeout(() => {
-        if (document.body.contains(errorNotification)) {
-          errorNotification.classList.add('animate-fadeOut');
-          setTimeout(() => {
-            if (document.body.contains(errorNotification)) {
-              document.body.removeChild(errorNotification);
-            }
-          }, 300);
-        }
-      }, 5000);
+      // Mostrar notificación de error
+      showNotification(
+        'Error de verificación',
+        'error',
+        error.message || 'No se pudo verificar el DNI. Intenta nuevamente.'
+      );
     } finally {
       setLoading(false);
     }
@@ -156,6 +173,7 @@ const ScannerPage = () => {
       if (response.ok || response.status === 404) {
         // Si la API está en línea nuevamente, eliminamos cualquier error previo
         setError(null);
+        showNotification('Conexión restablecida', 'success', 'El servidor está disponible nuevamente');
       }
     } catch (err) {
       console.error('Error al reintentar conexión con la API:', err);
@@ -196,10 +214,27 @@ const ScannerPage = () => {
           Verificación de identidad
         </h1>
 
-        {/* Subtítulo responsive 
-        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base max-w-md mx-auto">
-          Escanea el código PDF417 del reverso de tu DNI para acceder a tus datos médicos
-        </p>*/}
+        {/* Información sobre actualización automática */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/60 rounded-xl"
+        >
+          <div className="flex items-start gap-3">
+            <div className="bg-blue-100 dark:bg-blue-800/30 p-2 rounded-full flex-shrink-0">
+              <FaSync className="text-blue-500 dark:text-blue-400 text-sm" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-sm mb-1">
+                Actualización automática
+              </h3>
+              <p className="text-blue-700 dark:text-blue-300 text-xs">
+                Si ya estás registrado, tus datos se actualizarán automáticamente con la información del DNI escaneado.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Estado de conexión con la API */}
@@ -234,56 +269,6 @@ const ScannerPage = () => {
         </motion.div>
       )}
 
-      {/* Instrucciones de escaneo mejoradas para móvil 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/60 rounded-xl shadow-md"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-start sm:gap-3 gap-4">
-          <div>
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-lg mb-2 text-center sm:text-center">
-              Cómo escanear tu DNI
-            </h3>
-            <ol className="space-y-4">
-              <li className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-700 flex items-center justify-center text-blue-800 dark:text-blue-200 font-semibold text-xs">
-                  1
-                </div>
-                <span className="text-blue-800 dark:text-blue-300 text-sm text-center sm:text-left">
-                  Utiliza la parte trasera de tu DNI
-                </span>
-              </li>
-              <li className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-700 flex items-center justify-center text-blue-800 dark:text-blue-200 font-semibold text-xs">
-                  2
-                </div>
-                <span className="text-blue-800 dark:text-blue-300 text-sm text-center sm:text-left">
-                  Asegúrate de que el código quede dentro del recuadro
-                </span>
-              </li>
-              <li className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-700 flex items-center justify-center text-blue-800 dark:text-blue-200 font-semibold text-xs">
-                  3
-                </div>
-                <span className="text-blue-800 dark:text-blue-300 text-sm text-center sm:text-left">
-                  Mantén el DNI a unos 15–20 cm de la cámara
-                </span>
-              </li>
-              <li className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-700 flex items-center justify-center text-blue-800 dark:text-blue-200 font-semibold text-xs">
-                  4
-                </div>
-                <span className="text-blue-800 dark:text-blue-300 text-sm text-center sm:text-left">
-                  Asegúrate de tener buena iluminación
-                </span>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </motion.div>
-*/}
       {loading ? (
         <motion.div
           initial={{ opacity: 0 }}

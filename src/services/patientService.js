@@ -88,13 +88,135 @@ API.interceptors.response.use(
 
 // Servicio para manejar pacientes
 const patientService = {
-  // Verificar paciente por DNI
-  checkPatientByDni: async (dni) => {
+  // Verificar paciente por DNI y actualizar datos si coincide DNI y sexo
+  checkPatientByDni: async (dni, dniScanData = null) => {
     try {
+      console.log('🔍 Verificando paciente por DNI:', dni);
+      console.log('📄 Datos del escaneo:', dniScanData);
+      
       const response = await API.get(`/patients/check/${dni}`);
+      const result = response.data;
+      
+      console.log('📊 Resultado de la búsqueda:', result);
+      
+      // Si el paciente existe y tenemos datos del escaneo, verificar si necesita actualización
+      if (result.exists && result.patient && dniScanData) {
+        console.log('✅ Paciente encontrado, verificando si necesita actualización...');
+        
+        const shouldUpdate = await patientService.shouldUpdatePatientData(result.patient, dniScanData);
+        console.log('🔄 ¿Necesita actualización?', shouldUpdate);
+        
+        if (shouldUpdate) {
+          console.log('🚀 Actualizando datos del paciente con información del DNI escaneado...');
+          
+          // Actualizar los datos del paciente con la información del DNI
+          const updatedPatient = await patientService.updatePatientWithDniData(result.patient.id, dniScanData);
+          console.log('📝 Resultado de la actualización:', updatedPatient);
+          
+          if (updatedPatient.success) {
+            // Retornar el paciente actualizado
+            return {
+              exists: true,
+              patient: updatedPatient.patient,
+              updated: true // Indicar que se actualizaron los datos
+            };
+          }
+        } else {
+          console.log('ℹ️ No se requiere actualización - datos ya están correctos');
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error al verificar paciente:', error);
+      throw error;
+    }
+  },
+  
+  // Verificar si el paciente necesita actualización basado en DNI y sexo
+  shouldUpdatePatientData: async (existingPatient, dniScanData) => {
+    console.log('🔍 Comparando datos existentes vs escaneados:');
+    console.log('👤 Paciente existente:', {
+      dni: existingPatient.dni,
+      nombre: existingPatient.nombre,
+      apellido: existingPatient.apellido,
+      sexo: existingPatient.sexo,
+      fecnac: existingPatient.fecnac
+    });
+    console.log('📄 Datos del DNI:', dniScanData);
+    
+    // Verificar que coincidan DNI y sexo
+    const dniMatches = existingPatient.dni === dniScanData.dni;
+    const sexMatches = existingPatient.sexo === dniScanData.genero;
+    
+    console.log('🔢 DNI coincide:', dniMatches, `(${existingPatient.dni} === ${dniScanData.dni})`);
+    console.log('👫 Sexo coincide:', sexMatches, `(${existingPatient.sexo} === ${dniScanData.genero})`);
+    
+    if (!dniMatches || !sexMatches) {
+      console.log('❌ No se actualizarán los datos: DNI o sexo no coinciden');
+      return false;
+    }
+    
+    // Verificar si hay diferencias en los datos básicos
+    const hasNameChanges = existingPatient.nombre !== dniScanData.nombre || 
+                          existingPatient.apellido !== dniScanData.apellido;
+    
+    console.log('📝 Cambios en nombre/apellido:', hasNameChanges);
+    console.log('  - Nombre actual:', existingPatient.nombre, 'vs DNI:', dniScanData.nombre);
+    console.log('  - Apellido actual:', existingPatient.apellido, 'vs DNI:', dniScanData.apellido);
+    
+    // Formatear fecha del DNI para comparar
+    const formatDateToISO = (dateString) => {
+      if (!dateString || dateString === 'No disponible') return '';
+      const parts = dateString.split('/');
+      if (parts.length !== 3) return '';
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    };
+    
+    const dniDate = formatDateToISO(dniScanData.fechaNac);
+    const hasDateChange = dniDate && existingPatient.fecnac !== dniDate;
+    
+    console.log('📅 Cambios en fecha:', hasDateChange);
+    console.log('  - Fecha actual:', existingPatient.fecnac, 'vs DNI:', dniDate);
+    
+    const needsUpdate = hasNameChanges || hasDateChange;
+    console.log('🎯 Resultado final - Necesita actualización:', needsUpdate);
+    
+    return needsUpdate;
+  },
+  
+  // Actualizar paciente con datos del DNI escaneado
+  updatePatientWithDniData: async (patientId, dniScanData) => {
+    try {
+      // Formatear fecha del DNI
+      const formatDateToISO = (dateString) => {
+        if (!dateString || dateString === 'No disponible') return null;
+        const parts = dateString.split('/');
+        if (parts.length !== 3) return null;
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      };
+      
+      // Preparar datos para actualizar (solo campos del DNI)
+      const updateData = {
+        nombre: dniScanData.nombre,
+        apellido: dniScanData.apellido,
+        sexo: dniScanData.genero,
+        fecnac: formatDateToISO(dniScanData.fechaNac)
+      };
+      
+      // Filtrar campos nulos o vacíos
+      const filteredData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => 
+          value !== null && value !== undefined && value !== ''
+        )
+      );
+      
+      console.log('Datos a actualizar desde DNI:', filteredData);
+      
+      const response = await API.put(`/patients/${patientId}/dni-update`, filteredData);
       return response.data;
     } catch (error) {
-      console.error('Error al verificar paciente:', error);
+      console.error('Error al actualizar paciente con datos del DNI:', error);
       throw error;
     }
   },
@@ -130,7 +252,7 @@ const patientService = {
     }
   },
   
-  // Actualizar datos del paciente
+  // Actualizar datos del paciente (actualización manual desde perfil)
   updatePatient: async (id, updatedData) => {
     try {
       // Formatear los datos para evitar enviar campos vacíos como cadenas vacías
