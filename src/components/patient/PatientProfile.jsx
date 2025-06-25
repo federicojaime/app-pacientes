@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUser, FaIdCard, FaInfoCircle, FaMapMarkerAlt, FaPhone, FaEnvelope, 
-         FaPencilAlt, FaSave, FaTimes, FaWeight, FaRulerVertical, FaHospital, 
-         FaCalendarAlt, FaVenusMars, FaGenderless } from 'react-icons/fa';
+import {
+  FaUser, FaIdCard, FaInfoCircle, FaMapMarkerAlt, FaPhone, FaEnvelope,
+  FaPencilAlt, FaSave, FaTimes, FaWeight, FaRulerVertical, FaHospital,
+  FaCalendarAlt, FaVenusMars, FaGenderless
+} from 'react-icons/fa';
 
 const PatientProfile = ({ patient, onSave }) => {
   const [editableFields, setEditableFields] = useState({
@@ -22,7 +24,7 @@ const PatientProfile = ({ patient, onSave }) => {
   const [editing, setEditing] = useState({});
   const [touched, setTouched] = useState({});
   const [validations, setValidations] = useState({});
-  
+
   // Actualizar los campos editables cuando cambia el paciente
   useEffect(() => {
     if (patient) {
@@ -41,12 +43,12 @@ const PatientProfile = ({ patient, onSave }) => {
       });
     }
   }, [patient]);
-  
+
   // Campos que el usuario puede editar
   const editableFieldsConfig = {
-    telefono: { 
-      icon: <FaPhone />, 
-      label: 'Teléfono', 
+    telefono: {
+      icon: <FaPhone />,
+      label: 'Teléfono',
       type: 'tel',
       placeholder: 'Ingresa tu teléfono',
       validate: value => {
@@ -56,9 +58,9 @@ const PatientProfile = ({ patient, onSave }) => {
         return null;
       }
     },
-    email: { 
-      icon: <FaEnvelope />, 
-      label: 'Email', 
+    email: {
+      icon: <FaEnvelope />,
+      label: 'Email',
       type: 'email',
       placeholder: 'Ingresa tu email',
       validate: value => {
@@ -68,15 +70,15 @@ const PatientProfile = ({ patient, onSave }) => {
         return null;
       }
     },
-    calle: { 
-      icon: <FaMapMarkerAlt />, 
-      label: 'Calle', 
+    calle: {
+      icon: <FaMapMarkerAlt />,
+      label: 'Calle',
       type: 'text',
       placeholder: 'Ingresa tu calle'
     },
-    numero: { 
-      icon: null, 
-      label: 'Número', 
+    numero: {
+      icon: null,
+      label: 'Número',
       type: 'text',
       placeholder: 'Nº',
       validate: value => {
@@ -86,33 +88,33 @@ const PatientProfile = ({ patient, onSave }) => {
         return null;
       }
     },
-    piso: { 
-      icon: null, 
-      label: 'Piso', 
+    piso: {
+      icon: null,
+      label: 'Piso',
       type: 'text',
       placeholder: 'Piso'
     },
-    departamento: { 
-      icon: null, 
-      label: 'Departamento', 
+    departamento: {
+      icon: null,
+      label: 'Departamento',
       type: 'text',
       placeholder: 'Depto.'
     },
-    ciudad: { 
-      icon: <FaMapMarkerAlt />, 
-      label: 'Ciudad', 
+    ciudad: {
+      icon: <FaMapMarkerAlt />,
+      label: 'Ciudad',
       type: 'text',
       placeholder: 'Ingresa tu ciudad'
     },
-    provincia: { 
-      icon: <FaMapMarkerAlt />, 
-      label: 'Provincia', 
+    provincia: {
+      icon: <FaMapMarkerAlt />,
+      label: 'Provincia',
       type: 'text',
       placeholder: 'Ingresa tu provincia'
     },
-    cpostal: { 
-      icon: <FaMapMarkerAlt />, 
-      label: 'Código Postal', 
+    cpostal: {
+      icon: <FaMapMarkerAlt />,
+      label: 'Código Postal',
       type: 'text',
       placeholder: 'CP',
       validate: value => {
@@ -122,9 +124,9 @@ const PatientProfile = ({ patient, onSave }) => {
         return null;
       }
     },
-    peso: { 
-      icon: <FaWeight />, 
-      label: 'Peso (kg)', 
+    peso: {
+      icon: <FaWeight />,
+      label: 'Peso (kg)',
       type: 'number',
       placeholder: 'Ingresa tu peso en kg',
       validate: value => {
@@ -134,9 +136,9 @@ const PatientProfile = ({ patient, onSave }) => {
         return null;
       }
     },
-    talla: { 
-      icon: <FaRulerVertical />, 
-      label: 'Talla (cm)', 
+    talla: {
+      icon: <FaRulerVertical />,
+      label: 'Talla (cm)',
       type: 'number',
       placeholder: 'Ingresa tu talla en cm',
       validate: value => {
@@ -153,26 +155,27 @@ const PatientProfile = ({ patient, onSave }) => {
     nombre: { icon: <FaUser />, label: 'Nombre', value: patient?.nombre },
     apellido: { icon: <FaUser />, label: 'Apellido', value: patient?.apellido },
     dni: { icon: <FaIdCard />, label: 'DNI', value: patient?.dni },
-    sexo: { 
-      icon: patient?.sexo === 'M' ? <FaVenusMars /> : patient?.sexo === 'F' ? <FaVenusMars /> : <FaGenderless />, 
-      label: 'Sexo', 
-      value: patient?.sexo === 'M' ? 'Masculino' : patient?.sexo === 'F' ? 'Femenino' : 'No especificado' 
+    sexo: {
+      icon: patient?.sexo === 'M' ? <FaVenusMars /> : patient?.sexo === 'F' ? <FaVenusMars /> : <FaGenderless />,
+      label: 'Sexo',
+      value: patient?.sexo === 'M' ? 'Masculino' : patient?.sexo === 'F' ? 'Femenino' : 'No especificado'
     },
-    fecnac: { 
-      icon: <FaCalendarAlt />, 
-      label: 'Fecha de Nacimiento', 
-      value: patient?.fecnac 
+    fecnac: {
+      icon: <FaCalendarAlt />,
+      label: 'Fecha de Nacimiento',
+      value: patient?.fecnac
         ? new Date(patient.fecnac).toLocaleDateString('es-AR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          }) 
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          timeZone: 'UTC'
+        })
         : ''
     },
-    idobrasocial: { 
-      icon: <FaHospital />, 
-      label: 'Obra Social', 
-      value: patient?.idobrasocial ? patient.idobrasocial : 'SIN OBRA SOCIAL' 
+    idobrasocial: {
+      icon: <FaHospital />,
+      label: 'Obra Social',
+      value: patient?.idobrasocial ? patient.idobrasocial : 'SIN OBRA SOCIAL'
     }
   };
 
@@ -186,22 +189,22 @@ const PatientProfile = ({ patient, onSave }) => {
   };
 
   const handleEdit = (field) => {
-    setEditing({...editing, [field]: true});
-    setTouched({...touched, [field]: false});
+    setEditing({ ...editing, [field]: true });
+    setTouched({ ...touched, [field]: false });
   };
 
   const handleCancel = (field) => {
-    setEditing({...editing, [field]: false});
-    setTouched({...touched, [field]: false});
+    setEditing({ ...editing, [field]: false });
+    setTouched({ ...touched, [field]: false });
     // Revertir a los valores originales
     setEditableFields({
       ...editableFields,
       [field]: patient[field] || ''
     });
-    
+
     // Eliminar cualquier error de validación para este campo
     if (validations[field]) {
-      const newValidations = {...validations};
+      const newValidations = { ...validations };
       delete newValidations[field];
       setValidations(newValidations);
     }
@@ -212,7 +215,7 @@ const PatientProfile = ({ patient, onSave }) => {
       ...editableFields,
       [field]: value
     });
-    
+
     // Ejecutar validación solo si el campo ya ha sido tocado
     if (touched[field]) {
       const error = validateField(field, value);
@@ -222,9 +225,9 @@ const PatientProfile = ({ patient, onSave }) => {
       });
     }
   };
-  
+
   const handleBlur = (field) => {
-    setTouched({...touched, [field]: true});
+    setTouched({ ...touched, [field]: true });
     const error = validateField(field, editableFields[field]);
     setValidations({
       ...validations,
@@ -235,7 +238,7 @@ const PatientProfile = ({ patient, onSave }) => {
   const handleSave = (field) => {
     // Validar el campo antes de guardar
     const error = validateField(field, editableFields[field]);
-    
+
     if (error) {
       setValidations({
         ...validations,
@@ -243,20 +246,20 @@ const PatientProfile = ({ patient, onSave }) => {
       });
       return;
     }
-    
-    setEditing({...editing, [field]: false});
-    setTouched({...touched, [field]: false});
-    
+
+    setEditing({ ...editing, [field]: false });
+    setTouched({ ...touched, [field]: false });
+
     // Eliminar cualquier error de validación para este campo
     if (validations[field]) {
-      const newValidations = {...validations};
+      const newValidations = { ...validations };
       delete newValidations[field];
       setValidations(newValidations);
     }
-    
+
     // Sólo actualizar si el valor ha cambiado
     if (editableFields[field] !== patient[field]) {
-      onSave({...patient, [field]: editableFields[field]});
+      onSave({ ...patient, [field]: editableFields[field] });
     }
   };
 
@@ -264,10 +267,10 @@ const PatientProfile = ({ patient, onSave }) => {
     const config = editableFieldsConfig[key];
     const isEditing = editing[key];
     const error = validations[key];
-    
+
     return (
-      <motion.div 
-        key={key} 
+      <motion.div
+        key={key}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -280,7 +283,7 @@ const PatientProfile = ({ patient, onSave }) => {
           </div>
           {isEditing ? (
             <div className="flex gap-2">
-              <motion.button 
+              <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleSave(key)}
                 className="p-1.5 text-green-500 hover:text-green-600 transition-colors"
@@ -289,7 +292,7 @@ const PatientProfile = ({ patient, onSave }) => {
               >
                 <FaSave />
               </motion.button>
-              <motion.button 
+              <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleCancel(key)}
                 className="p-1.5 text-red-500 hover:text-red-600 transition-colors"
@@ -299,7 +302,7 @@ const PatientProfile = ({ patient, onSave }) => {
               </motion.button>
             </div>
           ) : (
-            <motion.button 
+            <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => handleEdit(key)}
               className="p-1.5 text-gray-500 hover:text-primary-500 transition-colors"
@@ -312,7 +315,7 @@ const PatientProfile = ({ patient, onSave }) => {
 
         <AnimatePresence mode="wait">
           {isEditing ? (
-            <motion.div 
+            <motion.div
               key="editing"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -330,7 +333,7 @@ const PatientProfile = ({ patient, onSave }) => {
                 autoFocus
               />
               {error && (
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="mt-1 text-sm text-red-500 dark:text-red-400"
@@ -340,7 +343,7 @@ const PatientProfile = ({ patient, onSave }) => {
               )}
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="view"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -358,10 +361,10 @@ const PatientProfile = ({ patient, onSave }) => {
 
   const renderReadOnlyField = (key) => {
     const config = readOnlyFields[key];
-    
+
     return (
-      <motion.div 
-        key={key} 
+      <motion.div
+        key={key}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -384,22 +387,22 @@ const PatientProfile = ({ patient, onSave }) => {
   // Configuración de animación para la tarjeta principal
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.5 }
     }
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={cardVariants}
       className="w-full max-w-md mx-auto"
     >
       {/* Tarjeta de perfil principal */}
-      <motion.div 
+      <motion.div
         className="bg-gradient-to-br from-primary-main to-primary-dark rounded-3xl shadow-lg p-6 mb-6"
         whileHover={{ y: -5 }}
         transition={{ duration: 0.3 }}
@@ -418,7 +421,7 @@ const PatientProfile = ({ patient, onSave }) => {
       {/* Alerta de edición */}
       <AnimatePresence>
         {isAnyFieldEditing && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

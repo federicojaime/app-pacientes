@@ -18,11 +18,11 @@ API.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   // Agregar información de la versión de la app y el entorno
   config.headers['X-App-Version'] = '1.0.0';
   config.headers['X-App-Environment'] = import.meta.env.MODE || 'production';
-  
+
   return config;
 }, (error) => {
   console.error('Error en la configuración de la solicitud:', error);
@@ -38,7 +38,7 @@ API.interceptors.response.use(
     // Manejar errores comunes de forma centralizada
     let errorMessage = 'Error de conexión. Verifica tu conexión a internet y vuelve a intentarlo.';
     let errorDetails = null;
-    
+
     if (error.response) {
       // La petición fue hecha y el servidor respondió con un código de estado
       switch (error.response.status) {
@@ -60,19 +60,19 @@ API.interceptors.response.use(
         default:
           errorMessage = `Error ${error.response.status}: ${error.response.statusText}`;
       }
-      
+
       errorDetails = error.response.data;
     } else if (error.request) {
       // La petición fue hecha pero no se recibió respuesta
       errorMessage = 'No se recibió respuesta del servidor. Verifica tu conexión o intenta más tarde.';
     }
-    
+
     // Personalizar el objeto de error para facilitar su manejo
     const customError = new Error(errorMessage);
     customError.originalError = error;
     customError.details = errorDetails;
     customError.type = error.response ? 'server' : 'network';
-    
+
     // Log del error para depuración
     console.error('Error en API:', {
       message: errorMessage,
@@ -81,7 +81,7 @@ API.interceptors.response.use(
       url: error.config?.url,
       method: error.config?.method
     });
-    
+
     return Promise.reject(customError);
   }
 );
@@ -93,46 +93,22 @@ const patientService = {
     try {
       console.log('🔍 Verificando paciente por DNI:', dni);
       console.log('📄 Datos del escaneo:', dniScanData);
-      
-      const response = await API.get(`/patients/check/${dni}`);
-      const result = response.data;
-      
-      console.log('📊 Resultado de la búsqueda:', result);
-      
-      // Si el paciente existe y tenemos datos del escaneo, verificar si necesita actualización
-      if (result.exists && result.patient && dniScanData) {
-        console.log('✅ Paciente encontrado, verificando si necesita actualización...');
-        
-        const shouldUpdate = await patientService.shouldUpdatePatientData(result.patient, dniScanData);
-        console.log('🔄 ¿Necesita actualización?', shouldUpdate);
-        
-        if (shouldUpdate) {
-          console.log('🚀 Actualizando datos del paciente con información del DNI escaneado...');
-          
-          // Actualizar los datos del paciente con la información del DNI
-          const updatedPatient = await patientService.updatePatientWithDniData(result.patient.id, dniScanData);
-          console.log('📝 Resultado de la actualización:', updatedPatient);
-          
-          if (updatedPatient.success) {
-            // Retornar el paciente actualizado
-            return {
-              exists: true,
-              patient: updatedPatient.patient,
-              updated: true // Indicar que se actualizaron los datos
-            };
-          }
-        } else {
-          console.log('ℹ️ No se requiere actualización - datos ya están correctos');
-        }
+
+      // Configurar headers con datos del DNI si están disponibles
+      const config = {};
+      if (dniScanData) {
+        config.headers = {
+          'X-DNI-Data': JSON.stringify(dniScanData)
+        };
       }
-      
-      return result;
+
+      const response = await API.get(`/patients/check/${dni}`, config);
+      return response.data;
     } catch (error) {
       console.error('❌ Error al verificar paciente:', error);
       throw error;
     }
   },
-  
   // Verificar si el paciente necesita actualización basado en DNI y sexo
   shouldUpdatePatientData: async (existingPatient, dniScanData) => {
     console.log('🔍 Comparando datos existentes vs escaneados:');
@@ -144,27 +120,27 @@ const patientService = {
       fecnac: existingPatient.fecnac
     });
     console.log('📄 Datos del DNI:', dniScanData);
-    
+
     // Verificar que coincidan DNI y sexo
     const dniMatches = existingPatient.dni === dniScanData.dni;
     const sexMatches = existingPatient.sexo === dniScanData.genero;
-    
+
     console.log('🔢 DNI coincide:', dniMatches, `(${existingPatient.dni} === ${dniScanData.dni})`);
     console.log('👫 Sexo coincide:', sexMatches, `(${existingPatient.sexo} === ${dniScanData.genero})`);
-    
+
     if (!dniMatches || !sexMatches) {
       console.log('❌ No se actualizarán los datos: DNI o sexo no coinciden');
       return false;
     }
-    
+
     // Verificar si hay diferencias en los datos básicos
-    const hasNameChanges = existingPatient.nombre !== dniScanData.nombre || 
-                          existingPatient.apellido !== dniScanData.apellido;
-    
+    const hasNameChanges = existingPatient.nombre !== dniScanData.nombre ||
+      existingPatient.apellido !== dniScanData.apellido;
+
     console.log('📝 Cambios en nombre/apellido:', hasNameChanges);
     console.log('  - Nombre actual:', existingPatient.nombre, 'vs DNI:', dniScanData.nombre);
     console.log('  - Apellido actual:', existingPatient.apellido, 'vs DNI:', dniScanData.apellido);
-    
+
     // Formatear fecha del DNI para comparar
     const formatDateToISO = (dateString) => {
       if (!dateString || dateString === 'No disponible') return '';
@@ -172,19 +148,19 @@ const patientService = {
       if (parts.length !== 3) return '';
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     };
-    
+
     const dniDate = formatDateToISO(dniScanData.fechaNac);
     const hasDateChange = dniDate && existingPatient.fecnac !== dniDate;
-    
+
     console.log('📅 Cambios en fecha:', hasDateChange);
     console.log('  - Fecha actual:', existingPatient.fecnac, 'vs DNI:', dniDate);
-    
+
     const needsUpdate = hasNameChanges || hasDateChange;
     console.log('🎯 Resultado final - Necesita actualización:', needsUpdate);
-    
+
     return needsUpdate;
   },
-  
+
   // Actualizar paciente con datos del DNI escaneado
   updatePatientWithDniData: async (patientId, dniScanData) => {
     try {
@@ -195,7 +171,7 @@ const patientService = {
         if (parts.length !== 3) return null;
         return `${parts[2]}-${parts[1]}-${parts[0]}`;
       };
-      
+
       // Preparar datos para actualizar (solo campos del DNI)
       const updateData = {
         nombre: dniScanData.nombre,
@@ -203,16 +179,16 @@ const patientService = {
         sexo: dniScanData.genero,
         fecnac: formatDateToISO(dniScanData.fechaNac)
       };
-      
+
       // Filtrar campos nulos o vacíos
       const filteredData = Object.fromEntries(
-        Object.entries(updateData).filter(([_, value]) => 
+        Object.entries(updateData).filter(([_, value]) =>
           value !== null && value !== undefined && value !== ''
         )
       );
-      
+
       console.log('Datos a actualizar desde DNI:', filteredData);
-      
+
       const response = await API.put(`/patients/${patientId}/dni-update`, filteredData);
       return response.data;
     } catch (error) {
@@ -220,7 +196,7 @@ const patientService = {
       throw error;
     }
   },
-  
+
   // Registrar nuevo paciente
   registerPatient: async (patientData) => {
     try {
@@ -243,7 +219,7 @@ const patientService = {
         provincia: patientData.provincia || null,
         cpostal: patientData.cpostal || null
       };
-      
+
       const response = await API.post('/patients', formattedData);
       return response.data;
     } catch (error) {
@@ -251,7 +227,7 @@ const patientService = {
       throw error;
     }
   },
-  
+
   // Actualizar datos del paciente (actualización manual desde perfil)
   updatePatient: async (id, updatedData) => {
     try {
@@ -267,7 +243,7 @@ const patientService = {
             return [key, value];
           })
       );
-      
+
       const response = await API.put(`/patients/${id}`, formattedData);
       return response.data;
     } catch (error) {
@@ -275,7 +251,7 @@ const patientService = {
       throw error;
     }
   },
-  
+
   // Obtener próximas citas médicas del paciente
   getPatientAppointments: async (patientId) => {
     try {
@@ -286,7 +262,7 @@ const patientService = {
       throw error;
     }
   },
-  
+
   // Obtener recetas médicas del paciente
   getPatientPrescriptions: async (patientId) => {
     try {
@@ -297,7 +273,7 @@ const patientService = {
       throw error;
     }
   },
-  
+
   // Obtener estudios médicos del paciente
   getPatientMedicalTests: async (patientId) => {
     try {
