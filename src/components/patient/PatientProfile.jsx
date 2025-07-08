@@ -171,7 +171,7 @@ const PatientProfile = ({ patient, onSave }) => {
           timeZone: 'UTC'
         })
         : ''
-    },
+    }, 
     idobrasocial: {
       icon: <FaHospital />,
       label: 'Obra Social',
