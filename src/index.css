@@ -35,24 +35,37 @@
 
   /* Personalizaciones generales */
   body {
-    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300;
+    background-color: rgb(249 250 251);
+    color: rgb(17 24 39);
+    transition: background-color 0.3s ease, color 0.3s ease;
     overflow-x: hidden;
   }
   
+  html.dark body {
+    background-color: rgb(17 24 39);
+    color: rgb(249 250 251);
+  }
+  
   h1, h2, h3, h4, h5, h6 {
-    @apply font-medium tracking-tight;
+    font-weight: 500;
+    letter-spacing: -0.025em;
   }
   
   a {
-    @apply transition-colors duration-200;
+    transition: color 0.2s ease;
   }
   
   button {
-    @apply transition-all duration-200 font-medium;
+    transition: all 0.2s ease;
+    font-weight: 500;
   }
   
   input, textarea, select {
-    @apply transition-all duration-200 focus:outline-none;
+    transition: all 0.2s ease;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    outline: none;
   }
 
   /* Configuración para mejor soporte de scrollbar */
@@ -75,15 +88,15 @@
     background: rgba(0, 0, 0, 0.25);
   }
 
-  .dark ::-webkit-scrollbar-track {
+  html.dark ::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
   }
 
-  .dark ::-webkit-scrollbar-thumb {
+  html.dark ::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.1);
   }
 
-  .dark ::-webkit-scrollbar-thumb:hover {
+  html.dark ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.15);
   }
 }
@@ -91,47 +104,147 @@
 /* Componentes comunes con estilos de 2025 */
 @layer components {
   .btn-primary {
-    @apply px-5 py-2.5 bg-primary-main hover:bg-primary-dark text-white font-medium rounded-lg shadow-sm;
+    padding: 0.625rem 1.25rem;
+    background-color: var(--color-primary-main);
+    color: white;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--color-primary-dark);
   }
   
   .btn-secondary {
-    @apply px-5 py-2.5 bg-secondary-main hover:bg-secondary-dark text-white font-medium rounded-lg shadow-sm;
+    padding: 0.625rem 1.25rem;
+    background-color: var(--color-secondary-main);
+    color: white;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.2s ease;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--color-secondary-dark);
   }
   
   .btn-outline {
-    @apply px-5 py-2.5 border border-primary-main text-primary-main hover:bg-primary-main/5 font-medium rounded-lg;
+    padding: 0.625rem 1.25rem;
+    border: 1px solid var(--color-primary-main);
+    color: var(--color-primary-main);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    background-color: transparent;
+  }
+  
+  .btn-outline:hover {
+    background-color: rgba(30, 96, 145, 0.05);
   }
   
   .btn-ghost {
-    @apply px-4 py-2 text-primary-main hover:bg-primary-main/5 font-medium rounded-lg;
+    padding: 0.5rem 1rem;
+    color: var(--color-primary-main);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    background-color: transparent;
+  }
+  
+  .btn-ghost:hover {
+    background-color: rgba(30, 96, 145, 0.05);
   }
   
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-all duration-200;
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  html.dark .card {
+    background-color: rgb(31 41 55);
   }
   
   .card-hover {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .card-hover:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-0.25rem);
+  }
+  
+  html.dark .card-hover {
+    background-color: rgb(31 41 55);
   }
   
   .form-input {
-    @apply w-full px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-primary-main dark:text-white;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background-color: white;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 0.5rem;
+    color: rgb(17 24 39);
+  }
+  
+  .form-input:focus {
+    ring: 2px;
+    ring-color: var(--color-primary-main);
+    border-color: var(--color-primary-main);
+  }
+  
+  html.dark .form-input {
+    background-color: rgb(55 65 81);
+    border-color: rgb(75 85 99);
+    color: white;
   }
   
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
   
   .badge-primary {
-    @apply bg-primary-main/10 text-primary-main dark:bg-primary-main/20 dark:text-primary-light;
+    background-color: rgba(30, 96, 145, 0.1);
+    color: var(--color-primary-main);
+  }
+  
+  html.dark .badge-primary {
+    background-color: rgba(30, 96, 145, 0.2);
+    color: var(--color-primary-light);
   }
   
   .badge-secondary {
-    @apply bg-secondary-main/10 text-secondary-main dark:bg-secondary-main/20 dark:text-secondary-light;
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-secondary-main);
+  }
+  
+  html.dark .badge-secondary {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: var(--color-secondary-light);
   }
   
   .badge-accent {
-    @apply bg-accent-main/10 text-accent-main dark:bg-accent-main/20 dark:text-accent-light;
+    background-color: rgba(139, 92, 246, 0.1);
+    color: var(--color-accent-main);
+  }
+  
+  html.dark .badge-accent {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: var(--color-accent-light);
   }
 }
 
@@ -193,66 +306,66 @@
 }
 
 /* Modo oscuro para Ant Design */
-.dark .ant-card {
+html.dark .ant-card {
   background-color: #1f2937 !important;
   border-color: #374151 !important;
   color: #f9fafb !important;
 }
 
-.dark .ant-card-head {
+html.dark .ant-card-head {
   background-color: #1f2937 !important;
   border-color: #374151 !important;
   color: #f9fafb !important;
 }
 
-.dark .ant-card-head-title {
+html.dark .ant-card-head-title {
   color: #f9fafb !important;
 }
 
-.dark .ant-steps-item-title {
+html.dark .ant-steps-item-title {
   color: #f9fafb !important;
 }
 
-.dark .ant-steps-item-description {
+html.dark .ant-steps-item-description {
   color: #d1d5db !important;
 }
 
-.dark .ant-steps-item-wait .ant-steps-item-icon {
+html.dark .ant-steps-item-wait .ant-steps-item-icon {
   background-color: #374151 !important;
   border-color: #4b5563 !important;
 }
 
-.dark .ant-steps-item-wait .ant-steps-item-title {
+html.dark .ant-steps-item-wait .ant-steps-item-title {
   color: #9ca3af !important;
 }
 
-.dark .ant-steps-item-wait .ant-steps-item-description {
+html.dark .ant-steps-item-wait .ant-steps-item-description {
   color: #6b7280 !important;
 }
 
-.dark .ant-timeline-item-content {
+html.dark .ant-timeline-item-content {
   color: #f9fafb !important;
 }
 
-.dark .ant-timeline-item-head {
+html.dark .ant-timeline-item-head {
   background-color: #1f2937 !important;
 }
 
-.dark .ant-btn {
+html.dark .ant-btn {
   border-color: #374151 !important;
   color: #f9fafb !important;
 }
 
-.dark .ant-btn:not(.ant-btn-primary) {
+html.dark .ant-btn:not(.ant-btn-primary) {
   background-color: #374151 !important;
 }
 
-.dark .ant-btn:not(.ant-btn-primary):hover {
+html.dark .ant-btn:not(.ant-btn-primary):hover {
   background-color: #4b5563 !important;
   border-color: #6b7280 !important;
 }
 
-.dark .ant-tag {
+html.dark .ant-tag {
   background-color: #374151 !important;
   border-color: #4b5563 !important;
   color: #f9fafb !important;
@@ -363,7 +476,7 @@ video::-webkit-media-controls {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.dark .glassmorphism {
+html.dark .glassmorphism {
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -371,12 +484,15 @@ video::-webkit-media-controls {
 }
 
 /* Mejoras adicionales para componentes custom */
-.timeline-responsive {
-  @media (max-width: 768px) {
-    .ant-timeline-item-content {
-      margin-left: 0 !important;
-      padding-left: 20px !important;
-    }
+.timeline-responsive .ant-timeline-item-content {
+  margin-left: 0 !important;
+  padding-left: 20px !important;
+}
+
+@media (max-width: 768px) {
+  .timeline-responsive .ant-timeline-item-content {
+    margin-left: 0 !important;
+    padding-left: 20px !important;
   }
 }
 
@@ -408,19 +524,19 @@ video::-webkit-media-controls {
   color: #c2410c !important;
 }
 
-.dark .ant-tag-green {
+html.dark .ant-tag-green {
   background-color: #14532d !important;
   border-color: #16a34a !important;
   color: #4ade80 !important;
 }
 
-.dark .ant-tag-blue {
+html.dark .ant-tag-blue {
   background-color: #1e3a8a !important;
   border-color: #2563eb !important;
   color: #60a5fa !important;
 }
 
-.dark .ant-tag-orange {
+html.dark .ant-tag-orange {
   background-color: #9a3412 !important;
   border-color: #ea580c !important;
   color: #fb923c !important;

@@ -1,42 +1,543 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
+/* Importar estilos de Ant Design */
+@import 'antd/dist/reset.css';
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paleta de colores 2025 */
+    --color-primary-main: #1E6091;
+    --color-primary-light: #3A87C4;
+    --color-primary-dark: #0A4B78;
+    
+    --color-secondary-main: #10B981;
+    --color-secondary-light: #34D399;
+    --color-secondary-dark: #059669;
+    
+    --color-accent-main: #8B5CF6;
+    --color-accent-light: #A78BFA;
+    --color-accent-dark: #7C3AED;
+    
+    --color-success-main: #10B981;
+    --color-error-main: #EF4444;
+    --color-warning-main: #F59E0B;
+    --color-info-main: #3B82F6;
+    
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
-  to {
-    transform: rotate(360deg);
+
+  /* Personalizaciones generales */
+  body {
+    background-color: rgb(249 250 251);
+    color: rgb(17 24 39);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+  }
+  
+  html.dark body {
+    background-color: rgb(17 24 39);
+    color: rgb(249 250 251);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    letter-spacing: -0.025em;
+  }
+  
+  a {
+    transition: color 0.2s ease;
+  }
+  
+  button {
+    transition: all 0.2s ease;
+    font-weight: 500;
+  }
+  
+  input, textarea, select {
+    transition: all 0.2s ease;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+  }
+
+  /* Configuración para mejor soporte de scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  html.dark ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  html.dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  html.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+/* Componentes comunes con estilos de 2025 */
+@layer components {
+  .btn-primary {
+    padding: 0.625rem 1.25rem;
+    background-color: var(--color-primary-main);
+    color: white;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  .btn-secondary {
+    padding: 0.625rem 1.25rem;
+    background-color: var(--color-secondary-main);
+    color: white;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.2s ease;
+  }
+  
+  .btn-secondary:hover {
+    background-color: var(--color-secondary-dark);
+  }
+  
+  .btn-outline {
+    padding: 0.625rem 1.25rem;
+    border: 1px solid var(--color-primary-main);
+    color: var(--color-primary-main);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    background-color: transparent;
+  }
+  
+  .btn-outline:hover {
+    background-color: rgba(30, 96, 145, 0.05);
+  }
+  
+  .btn-ghost {
+    padding: 0.5rem 1rem;
+    color: var(--color-primary-main);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    background-color: transparent;
+  }
+  
+  .btn-ghost:hover {
+    background-color: rgba(30, 96, 145, 0.05);
+  }
+  
+  .card {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  html.dark .card {
+    background-color: rgb(31 41 55);
+  }
+  
+  .card-hover {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .card-hover:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-0.25rem);
+  }
+  
+  html.dark .card-hover {
+    background-color: rgb(31 41 55);
+  }
+  
+  .form-input {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background-color: white;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 0.5rem;
+    color: rgb(17 24 39);
+  }
+  
+  .form-input:focus {
+    ring: 2px;
+    ring-color: var(--color-primary-main);
+    border-color: var(--color-primary-main);
+  }
+  
+  html.dark .form-input {
+    background-color: rgb(55 65 81);
+    border-color: rgb(75 85 99);
+    color: white;
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  .badge-primary {
+    background-color: rgba(30, 96, 145, 0.1);
+    color: var(--color-primary-main);
+  }
+  
+  html.dark .badge-primary {
+    background-color: rgba(30, 96, 145, 0.2);
+    color: var(--color-primary-light);
+  }
+  
+  .badge-secondary {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-secondary-main);
+  }
+  
+  html.dark .badge-secondary {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: var(--color-secondary-light);
+  }
+  
+  .badge-accent {
+    background-color: rgba(139, 92, 246, 0.1);
+    color: var(--color-accent-main);
+  }
+  
+  html.dark .badge-accent {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: var(--color-accent-light);
   }
 }
 
-.card {
-  padding: 2em;
+/* Personalización de Ant Design para que funcione con tu tema */
+.ant-steps-item-finish .ant-steps-item-icon {
+  background-color: #10b981 !important;
+  border-color: #10b981 !important;
 }
 
-.read-the-docs {
-  color: #888;
+.ant-steps-item-process .ant-steps-item-icon {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+.ant-steps-item-wait .ant-steps-item-icon {
+  background-color: #e5e7eb !important;
+  border-color: #d1d5db !important;
+}
+
+.ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon {
+  color: #ffffff !important;
+}
+
+.ant-steps-item-process .ant-steps-item-icon > .ant-steps-icon {
+  color: #ffffff !important;
+}
+
+.ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-tail::after {
+  background-color: #10b981 !important;
+}
+
+.ant-card {
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+.ant-timeline-item-head {
+  border-radius: 50% !important;
+}
+
+.ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+.ant-btn-primary {
+  background-color: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+.ant-tag {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+/* Modo oscuro para Ant Design */
+html.dark .ant-card {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+html.dark .ant-card-head {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+html.dark .ant-card-head-title {
+  color: #f9fafb !important;
+}
+
+html.dark .ant-steps-item-title {
+  color: #f9fafb !important;
+}
+
+html.dark .ant-steps-item-description {
+  color: #d1d5db !important;
+}
+
+html.dark .ant-steps-item-wait .ant-steps-item-icon {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+html.dark .ant-steps-item-wait .ant-steps-item-title {
+  color: #9ca3af !important;
+}
+
+html.dark .ant-steps-item-wait .ant-steps-item-description {
+  color: #6b7280 !important;
+}
+
+html.dark .ant-timeline-item-content {
+  color: #f9fafb !important;
+}
+
+html.dark .ant-timeline-item-head {
+  background-color: #1f2937 !important;
+}
+
+html.dark .ant-btn {
+  border-color: #374151 !important;
+  color: #f9fafb !important;
+}
+
+html.dark .ant-btn:not(.ant-btn-primary) {
+  background-color: #374151 !important;
+}
+
+html.dark .ant-btn:not(.ant-btn-primary):hover {
+  background-color: #4b5563 !important;
+  border-color: #6b7280 !important;
+}
+
+html.dark .ant-tag {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f9fafb !important;
+}
+
+/* Responsive mejoras */
+@media (max-width: 1024px) {
+  .ant-steps-horizontal.ant-steps-label-vertical .ant-steps-item-description {
+    max-width: 100px !important;
+    text-align: center !important;
+    font-size: 12px !important;
+  }
+  
+  .ant-steps-horizontal.ant-steps-label-vertical .ant-steps-item-title {
+    font-size: 13px !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ant-steps-horizontal.ant-steps-label-vertical .ant-steps-item-description {
+    max-width: 80px !important;
+    font-size: 11px !important;
+  }
+  
+  .ant-steps-horizontal.ant-steps-label-vertical .ant-steps-item-title {
+    font-size: 12px !important;
+  }
+  
+  .ant-card {
+    margin: 0 !important;
+  }
+  
+  .ant-card-body {
+    padding: 16px !important;
+  }
+}
+
+/* Estilos específicos para la cámara */
+video {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Animación para el escáner */
+@keyframes scannerLine {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+.scanner-animation {
+  animation: scannerLine 2s linear infinite;
+}
+
+/* Asegurar que los controles del video no estén visibles */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+/* Clase para forzar la visibilidad del video */
+.camera-active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1 !important;
+}
+
+/* Animaciones Adicionales 2025 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtlePulse 3s ease-in-out infinite;
+}
+
+/* Efecto de glassmorphism estilo 2025 */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.dark .glassmorphism {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Mejoras adicionales para componentes custom */
+.timeline-responsive .ant-timeline-item-content {
+  margin-left: 0 !important;
+  padding-left: 20px !important;
+}
+
+@media (max-width: 768px) {
+  .timeline-responsive .ant-timeline-item-content {
+    margin-left: 0 !important;
+    padding-left: 20px !important;
+  }
+}
+
+/* Animaciones personalizadas para los steps */
+.ant-steps-item {
+  transition: all 0.3s ease !important;
+}
+
+.ant-steps-item:hover {
+  transform: translateY(-2px);
+}
+
+/* Mejoras para tags de estado */
+.ant-tag-green {
+  background-color: #dcfce7 !important;
+  border-color: #16a34a !important;
+  color: #15803d !important;
+}
+
+.ant-tag-blue {
+  background-color: #dbeafe !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+}
+
+.ant-tag-orange {
+  background-color: #fed7aa !important;
+  border-color: #ea580c !important;
+  color: #c2410c !important;
+}
+
+html.dark .ant-tag-green {
+  background-color: #14532d !important;
+  border-color: #16a34a !important;
+  color: #4ade80 !important;
+}
+
+html.dark .ant-tag-blue {
+  background-color: #1e3a8a !important;
+  border-color: #2563eb !important;
+  color: #60a5fa !important;
+}
+
+html.dark .ant-tag-orange {
+  background-color: #9a3412 !important;
+  border-color: #ea580c !important;
+  color: #fb923c !important;
 }
