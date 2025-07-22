@@ -1,10 +1,7 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  FaIdCard, FaUserMd, FaFileMedical, FaClipboardCheck, 
-  FaCalendarAlt, FaArrowRight, FaPrescriptionBottle 
-} from 'react-icons/fa';
+import { FaIdCard, FaUserMd, FaFileMedical, FaClipboardCheck, FaCalendarAlt, FaArrowRight } from 'react-icons/fa';
 import PatientContext from '../contexts/PatientContext';
 
 const HomePage = () => {
@@ -37,15 +34,7 @@ const HomePage = () => {
             icon: <FaIdCard />,
             title: 'Registro de Pacientes',
             description: 'Verificá tus datos personales escaneando tu DNI',
-            color: 'bg-blue-500',
-            link: '/scan'
-        },
-        {
-            icon: <FaPrescriptionBottle />,
-            title: 'Seguimiento de Medicamentos',
-            description: 'Consultá el estado de tus medicamentos de alto costo',
-            color: 'bg-purple-500',
-            link: '/medication-search'
+            color: 'bg-blue-500'
         },
         {
             icon: <FaFileMedical />,
@@ -172,20 +161,9 @@ const HomePage = () => {
                                     {feature.title}
                                 </h3>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300 ml-16 mb-4">
+                            <p className="text-gray-600 dark:text-gray-300 ml-16">
                                 {feature.description}
                             </p>
-                            {feature.link && !feature.soon && (
-                                <div className="ml-16">
-                                    <Link
-                                        to={feature.link}
-                                        className="inline-flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium text-sm transition-colors"
-                                    >
-                                        Acceder
-                                        <FaArrowRight className="ml-2 text-xs" />
-                                    </Link>
-                                </div>
-                            )}
                         </motion.div>
                     ))}
                 </div>

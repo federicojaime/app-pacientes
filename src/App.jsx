@@ -5,6 +5,8 @@ import HomePage from './pages/HomePage';
 import ScannerPage from './pages/ScannerPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
+import MedicationTrackingPage from './pages/MedicationTrackingPage'; // Nueva importación
+import MedicationSearchPage from './pages/MedicationSearchPage'; // Nueva importación
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import PatientContext from './contexts/PatientContext';
@@ -124,6 +126,54 @@ function App() {
                         transition={{ duration: 0.3 }}
                       >
                         <RegisterPage />
+                      </motion.div>
+                    }
+                  />
+                  {/* Nueva ruta para búsqueda de medicamentos */}
+                  <Route
+                    path="/medication-search"
+                    element={
+                      <motion.div
+                        key="medication-search"
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        variants={pageVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <MedicationSearchPage />
+                      </motion.div>
+                    }
+                  />
+                  {/* Nueva ruta para seguimiento de medicamentos */}
+                  <Route
+                    path="/medication-tracking/:trackingNumber"
+                    element={
+                      <motion.div
+                        key="medication-tracking"
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        variants={pageVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <MedicationTrackingPage />
+                      </motion.div>
+                    }
+                  />
+                  {/* Ruta de prueba - puedes eliminar esto después */}
+                  <Route
+                    path="/test-medication"
+                    element={
+                      <motion.div
+                        key="test-medication"
+                        initial="initial"
+                        animate="animate"
+                        exit="exit"
+                        variants={pageVariants}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <MedicationTrackingPage />
                       </motion.div>
                     }
                   />
